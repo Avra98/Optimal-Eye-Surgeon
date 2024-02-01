@@ -26,6 +26,29 @@ def crop_image(img, d=32):
     img_cropped = img.crop(bbox)
     return img_cropped
 
+def crop_image_to_square(img, d=32):
+    '''Crop image to make dimensions divisible by `d` and form a square'''
+
+    # Make dimensions divisible by `d`
+    new_width = img.size[0] - img.size[0] % d
+    new_height = img.size[1] - img.size[1] % d
+
+    # Determine size for the square
+    square_size = min(new_width, new_height)
+
+    # Calculate the bounding box for the square
+    bbox = [
+        int((img.size[0] - square_size) / 2), 
+        int((img.size[1] - square_size) / 2),
+        int((img.size[0] + square_size) / 2),
+        int((img.size[1] + square_size) / 2)
+    ]
+
+    # Crop the image
+    img_cropped = img.crop(bbox)
+    return img_cropped
+
+
 def get_params(opt_over, net, net_input, downsampler=None):
     '''Returns parameters that we want to optimize over.
 

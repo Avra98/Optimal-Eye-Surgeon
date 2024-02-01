@@ -1,0 +1,320 @@
+(3, 256, 256)
+Starting vanilla DIP on 12 using SAM(sigma=0.1,lr=0.01,decay=0,beta=0)
+Noisy PSNR is '23.78518957168204'
+Starting optimization with optimizer 'SAM'
+Output directory where image taken from: data/denoising/Set14/mask/12/skip/det/20.0/1e-09
+Output directory where results stored: data/denoising/Set14/mask/12/skip/det/20.0/1e-09/out_sparsenet/0.07
+1.0.1.1.weight       | nonzeros =     111 /     128             ( 86.72%) | total_pruned =      17 | shape = torch.Size([4, 32, 1, 1])
+1.0.1.1.bias         | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.0.2.weight         | nonzeros =       1 /       4             ( 25.00%) | total_pruned =       3 | shape = torch.Size([4])
+1.0.2.bias           | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.1.1.weight       | nonzeros =    4352 /    4608             ( 94.44%) | total_pruned =     256 | shape = torch.Size([16, 32, 3, 3])
+1.1.1.1.bias         | nonzeros =      16 /      16             (100.00%) | total_pruned =       0 | shape = torch.Size([16])
+1.1.2.weight         | nonzeros =       8 /      16             ( 50.00%) | total_pruned =       8 | shape = torch.Size([16])
+1.1.2.bias           | nonzeros =       0 /      16             (  0.00%) | total_pruned =      16 | shape = torch.Size([16])
+1.1.4.1.weight       | nonzeros =    2280 /    2304             ( 98.96%) | total_pruned =      24 | shape = torch.Size([16, 16, 3, 3])
+1.1.4.1.bias         | nonzeros =      16 /      16             (100.00%) | total_pruned =       0 | shape = torch.Size([16])
+1.1.5.weight         | nonzeros =       7 /      16             ( 43.75%) | total_pruned =       9 | shape = torch.Size([16])
+1.1.5.bias           | nonzeros =       0 /      16             (  0.00%) | total_pruned =      16 | shape = torch.Size([16])
+1.1.7.1.0.1.1.weight | nonzeros =      64 /      64             (100.00%) | total_pruned =       0 | shape = torch.Size([4, 16, 1, 1])
+1.1.7.1.0.1.1.bias   | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.0.2.weight   | nonzeros =       3 /       4             ( 75.00%) | total_pruned =       1 | shape = torch.Size([4])
+1.1.7.1.0.2.bias     | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.7.1.1.1.1.weight | nonzeros =    4586 /    4608             ( 99.52%) | total_pruned =      22 | shape = torch.Size([32, 16, 3, 3])
+1.1.7.1.1.1.1.bias   | nonzeros =      32 /      32             (100.00%) | total_pruned =       0 | shape = torch.Size([32])
+1.1.7.1.1.2.weight   | nonzeros =      16 /      32             ( 50.00%) | total_pruned =      16 | shape = torch.Size([32])
+1.1.7.1.1.2.bias     | nonzeros =       0 /      32             (  0.00%) | total_pruned =      32 | shape = torch.Size([32])
+1.1.7.1.1.4.1.weight | nonzeros =    9190 /    9216             ( 99.72%) | total_pruned =      26 | shape = torch.Size([32, 32, 3, 3])
+1.1.7.1.1.4.1.bias   | nonzeros =      32 /      32             (100.00%) | total_pruned =       0 | shape = torch.Size([32])
+1.1.7.1.1.5.weight   | nonzeros =      16 /      32             ( 50.00%) | total_pruned =      16 | shape = torch.Size([32])
+1.1.7.1.1.5.bias     | nonzeros =       0 /      32             (  0.00%) | total_pruned =      32 | shape = torch.Size([32])
+1.1.7.1.1.7.1.0.1.1.weight | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([4, 32, 1, 1])
+1.1.7.1.1.7.1.0.1.1.bias | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.0.2.weight | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.0.2.bias | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.1.1.weight | nonzeros =   18402 /   18432             ( 99.84%) | total_pruned =      30 | shape = torch.Size([64, 32, 3, 3])
+1.1.7.1.1.7.1.1.1.1.bias | nonzeros =      64 /      64             (100.00%) | total_pruned =       0 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.2.weight | nonzeros =      33 /      64             ( 51.56%) | total_pruned =      31 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.2.bias | nonzeros =       0 /      64             (  0.00%) | total_pruned =      64 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.4.1.weight | nonzeros =   36833 /   36864             ( 99.92%) | total_pruned =      31 | shape = torch.Size([64, 64, 3, 3])
+1.1.7.1.1.7.1.1.4.1.bias | nonzeros =      64 /      64             (100.00%) | total_pruned =       0 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.5.weight | nonzeros =      36 /      64             ( 56.25%) | total_pruned =      28 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.5.bias | nonzeros =       0 /      64             (  0.00%) | total_pruned =      64 | shape = torch.Size([64])
+1.1.7.1.1.7.1.1.7.1.0.1.1.weight | nonzeros =     256 /     256             (100.00%) | total_pruned =       0 | shape = torch.Size([4, 64, 1, 1])
+1.1.7.1.1.7.1.1.7.1.0.1.1.bias | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.0.2.weight | nonzeros =       3 /       4             ( 75.00%) | total_pruned =       1 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.0.2.bias | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.1.1.weight | nonzeros =   73705 /   73728             ( 99.97%) | total_pruned =      23 | shape = torch.Size([128, 64, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.1.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.2.weight | nonzeros =      62 /     128             ( 48.44%) | total_pruned =      66 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.2.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.4.1.weight | nonzeros =  147435 /  147456             ( 99.99%) | total_pruned =      21 | shape = torch.Size([128, 128, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.4.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.5.weight | nonzeros =      68 /     128             ( 53.12%) | total_pruned =      60 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.5.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.0.1.1.weight | nonzeros =     501 /     512             ( 97.85%) | total_pruned =      11 | shape = torch.Size([4, 128, 1, 1])
+1.1.7.1.1.7.1.1.7.1.1.7.1.0.1.1.bias | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.0.2.weight | nonzeros =       2 /       4             ( 50.00%) | total_pruned =       2 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.0.2.bias | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.1.1.weight | nonzeros =  147408 /  147456             ( 99.97%) | total_pruned =      48 | shape = torch.Size([128, 128, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.1.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.2.weight | nonzeros =      65 /     128             ( 50.78%) | total_pruned =      63 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.2.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.4.1.weight | nonzeros =  147282 /  147456             ( 99.88%) | total_pruned =     174 | shape = torch.Size([128, 128, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.4.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.5.weight | nonzeros =      78 /     128             ( 60.94%) | total_pruned =      50 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.5.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.0.1.1.weight | nonzeros =     507 /     512             ( 99.02%) | total_pruned =       5 | shape = torch.Size([4, 128, 1, 1])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.0.1.1.bias | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.0.2.weight | nonzeros =       4 /       4             (100.00%) | total_pruned =       0 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.0.2.bias | nonzeros =       0 /       4             (  0.00%) | total_pruned =       4 | shape = torch.Size([4])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.1.1.weight | nonzeros =  147109 /  147456             ( 99.76%) | total_pruned =     347 | shape = torch.Size([128, 128, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.1.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.2.weight | nonzeros =      72 /     128             ( 56.25%) | total_pruned =      56 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.2.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.4.1.weight | nonzeros =  145749 /  147456             ( 98.84%) | total_pruned =    1707 | shape = torch.Size([128, 128, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.4.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.5.weight | nonzeros =     113 /     128             ( 88.28%) | total_pruned =      15 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.1.1.5.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.2.weight | nonzeros =      86 /     132             ( 65.15%) | total_pruned =      46 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.2.bias | nonzeros =       0 /     132             (  0.00%) | total_pruned =     132 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.3.1.weight | nonzeros =  148116 /  152064             ( 97.40%) | total_pruned =    3948 | shape = torch.Size([128, 132, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.3.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.4.weight | nonzeros =     113 /     128             ( 88.28%) | total_pruned =      15 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.1.1.7.4.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.2.weight | nonzeros =      89 /     132             ( 67.42%) | total_pruned =      43 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.1.1.7.2.bias | nonzeros =       0 /     132             (  0.00%) | total_pruned =     132 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.1.1.7.3.1.weight | nonzeros =  147147 /  152064             ( 96.77%) | total_pruned =    4917 | shape = torch.Size([128, 132, 3, 3])
+1.1.7.1.1.7.1.1.7.1.1.7.3.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.4.weight | nonzeros =     119 /     128             ( 92.97%) | total_pruned =       9 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.1.1.7.4.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.2.weight | nonzeros =      84 /     132             ( 63.64%) | total_pruned =      48 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.2.bias | nonzeros =       0 /     132             (  0.00%) | total_pruned =     132 | shape = torch.Size([132])
+1.1.7.1.1.7.1.1.7.3.1.weight | nonzeros =  146993 /  152064             ( 96.67%) | total_pruned =    5071 | shape = torch.Size([128, 132, 3, 3])
+1.1.7.1.1.7.1.1.7.3.1.bias | nonzeros =     128 /     128             (100.00%) | total_pruned =       0 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.4.weight | nonzeros =     109 /     128             ( 85.16%) | total_pruned =      19 | shape = torch.Size([128])
+1.1.7.1.1.7.1.1.7.4.bias | nonzeros =       0 /     128             (  0.00%) | total_pruned =     128 | shape = torch.Size([128])
+1.1.7.1.1.7.2.weight | nonzeros =      82 /     132             ( 62.12%) | total_pruned =      50 | shape = torch.Size([132])
+1.1.7.1.1.7.2.bias   | nonzeros =       0 /     132             (  0.00%) | total_pruned =     132 | shape = torch.Size([132])
+1.1.7.1.1.7.3.1.weight | nonzeros =   72369 /   76032             ( 95.18%) | total_pruned =    3663 | shape = torch.Size([64, 132, 3, 3])
+1.1.7.1.1.7.3.1.bias | nonzeros =      64 /      64             (100.00%) | total_pruned =       0 | shape = torch.Size([64])
+1.1.7.1.1.7.4.weight | nonzeros =      55 /      64             ( 85.94%) | total_pruned =       9 | shape = torch.Size([64])
+1.1.7.1.1.7.4.bias   | nonzeros =       0 /      64             (  0.00%) | total_pruned =      64 | shape = torch.Size([64])
+1.1.7.2.weight       | nonzeros =      42 /      68             ( 61.76%) | total_pruned =      26 | shape = torch.Size([68])
+1.1.7.2.bias         | nonzeros =       0 /      68             (  0.00%) | total_pruned =      68 | shape = torch.Size([68])
+1.1.7.3.1.weight     | nonzeros =   18554 /   19584             ( 94.74%) | total_pruned =    1030 | shape = torch.Size([32, 68, 3, 3])
+1.1.7.3.1.bias       | nonzeros =      32 /      32             (100.00%) | total_pruned =       0 | shape = torch.Size([32])
+1.1.7.4.weight       | nonzeros =      21 /      32             ( 65.62%) | total_pruned =      11 | shape = torch.Size([32])
+1.1.7.4.bias         | nonzeros =       0 /      32             (  0.00%) | total_pruned =      32 | shape = torch.Size([32])
+2.weight             | nonzeros =      11 /      36             ( 30.56%) | total_pruned =      25 | shape = torch.Size([36])
+2.bias               | nonzeros =       0 /      36             (  0.00%) | total_pruned =      36 | shape = torch.Size([36])
+3.1.weight           | nonzeros =    4610 /    5184             ( 88.93%) | total_pruned =     574 | shape = torch.Size([16, 36, 3, 3])
+3.1.bias             | nonzeros =      16 /      16             (100.00%) | total_pruned =       0 | shape = torch.Size([16])
+4.weight             | nonzeros =      16 /      16             (100.00%) | total_pruned =       0 | shape = torch.Size([16])
+4.bias               | nonzeros =       0 /      16             (  0.00%) | total_pruned =      16 | shape = torch.Size([16])
+6.1.weight           | nonzeros =      31 /      48             ( 64.58%) | total_pruned =      17 | shape = torch.Size([3, 16, 1, 1])
+6.1.bias             | nonzeros =       1 /       3             ( 33.33%) | total_pruned =       2 | shape = torch.Size([3])
+alive: 1426649, pruned : 24834, total: 1451483, Compression rate :       1.02x  (  1.71% pruned)
+epoch:  0 loss:  0.0298289991915226 PSNR:  15.546768010497 PSNR_noisy:  15.25361339447491
+epoch:  200 loss:  0.006544779054820538 PSNR:  25.614920241020815 PSNR_noisy:  21.841050358942596
+epoch:  400 loss:  0.005865536630153656 PSNR:  26.928175733256904 PSNR_noisy:  22.31692216145371
+epoch:  600 loss:  0.0056003849022090435 PSNR:  27.553464694524273 PSNR_noisy:  22.517821314158173
+epoch:  800 loss:  0.005270931404083967 PSNR:  28.402558984441733 PSNR_noisy:  22.78112649140066
+epoch:  1000 loss:  0.005108232609927654 PSNR:  28.87621368929625 PSNR_noisy:  22.9172938041209
+epoch:  1200 loss:  0.004999314434826374 PSNR:  29.02036705075289 PSNR_noisy:  23.01089557186169
+epoch:  1400 loss:  0.004812327679246664 PSNR:  29.60703970339519 PSNR_noisy:  23.17644855077186
+epoch:  1600 loss:  0.004745951388031244 PSNR:  29.750473075166674 PSNR_noisy:  23.23676710348966
+epoch:  1800 loss:  0.004690004978328943 PSNR:  29.67348791972933 PSNR_noisy:  23.28826730095738
+epoch:  2000 loss:  0.004543481860309839 PSNR:  30.059071245472268 PSNR_noisy:  23.426112047443553
+epoch:  2200 loss:  0.004482177551835775 PSNR:  29.99483952609955 PSNR_noisy:  23.485109144141155
+epoch:  2400 loss:  0.00451727956533432 PSNR:  29.662422194514434 PSNR_noisy:  23.451230596645853
+epoch:  2600 loss:  0.004539636895060539 PSNR:  29.328713853356764 PSNR_noisy:  23.429789069071987
+epoch:  2800 loss:  0.004306855611503124 PSNR:  29.93144046250602 PSNR_noisy:  23.658397156855013
+epoch:  3000 loss:  0.004258548840880394 PSNR:  29.86129620166716 PSNR_noisy:  23.707383741014144
+epoch:  3200 loss:  0.004173485562205315 PSNR:  29.69316380666809 PSNR_noisy:  23.795011166015527
+epoch:  3400 loss:  0.004094265401363373 PSNR:  29.64782893015617 PSNR_noisy:  23.878240066412793
+epoch:  3600 loss:  0.004074253607541323 PSNR:  29.47964272114474 PSNR_noisy:  23.89951952656906
+epoch:  3800 loss:  0.004043655935674906 PSNR:  29.18583937204227 PSNR_noisy:  23.932258462257423
+epoch:  4000 loss:  0.0039011910557746887 PSNR:  29.06487409081928 PSNR_noisy:  24.088027737537963
+epoch:  4200 loss:  0.003863320453092456 PSNR:  29.03118770922419 PSNR_noisy:  24.130392795299144
+epoch:  4400 loss:  0.003784738015383482 PSNR:  28.7168582703976 PSNR_noisy:  24.21964194532205
+epoch:  4600 loss:  0.0037745325826108456 PSNR:  28.580300269852362 PSNR_noisy:  24.231368327259464
+epoch:  4800 loss:  0.003684324212372303 PSNR:  28.715848530625394 PSNR_noisy:  24.33642155992701
+epoch:  5000 loss:  0.0035669538192451 PSNR:  28.708479885039523 PSNR_noisy:  24.477025419409756
+epoch:  5200 loss:  0.0036801386158913374 PSNR:  28.042848340219514 PSNR_noisy:  24.34135829899089
+epoch:  5400 loss:  0.0034267695154994726 PSNR:  28.370465125189565 PSNR_noisy:  24.65115089708965
+epoch:  5600 loss:  0.0034112564753741026 PSNR:  28.363020945561345 PSNR_noisy:  24.670856554475616
+epoch:  5800 loss:  0.0033363080583512783 PSNR:  27.95227420198413 PSNR_noisy:  24.76733893756817
+epoch:  6000 loss:  0.003278773743659258 PSNR:  28.286869241853694 PSNR_noisy:  24.842885639354595
+epoch:  6200 loss:  0.0032530538737773895 PSNR:  28.4101942432888 PSNR_noisy:  24.877087010231072
+epoch:  6400 loss:  0.003242596983909607 PSNR:  28.19909491632839 PSNR_noisy:  24.89107012241795
+epoch:  6600 loss:  0.003166618524119258 PSNR:  28.106422722809178 PSNR_noisy:  24.99404274030939
+epoch:  6800 loss:  0.003147843759506941 PSNR:  27.587886780174067 PSNR_noisy:  25.019868415654116
+epoch:  7000 loss:  0.0031243450939655304 PSNR:  27.919096134339078 PSNR_noisy:  25.052409934155257
+epoch:  7200 loss:  0.0031265101861208677 PSNR:  27.895521592952313 PSNR_noisy:  25.049401317573
+epoch:  7400 loss:  0.0030496641993522644 PSNR:  27.881201595505217 PSNR_noisy:  25.15748015052331
+epoch:  7600 loss:  0.0030345930717885494 PSNR:  27.70773502170197 PSNR_noisy:  25.178995641700634
+epoch:  7800 loss:  0.0031372029334306717 PSNR:  27.788627536842085 PSNR_noisy:  25.034574133572484
+epoch:  8000 loss:  0.0029799954500049353 PSNR:  27.187206795475976 PSNR_noisy:  25.257843892249024
+epoch:  8200 loss:  0.003008377505466342 PSNR:  27.312456884361787 PSNR_noisy:  25.216676703334073
+epoch:  8400 loss:  0.0029288630466908216 PSNR:  27.555350710173844 PSNR_noisy:  25.333009460248338
+epoch:  8600 loss:  0.0029522967524826527 PSNR:  27.506797765314836 PSNR_noisy:  25.298400539772558
+epoch:  8800 loss:  0.0028919195756316185 PSNR:  27.101534382779814 PSNR_noisy:  25.3881378407372
+epoch:  9000 loss:  0.002872559241950512 PSNR:  27.44664867125603 PSNR_noisy:  25.417309979151497
+epoch:  9200 loss:  0.002823980525135994 PSNR:  27.37371311448161 PSNR_noisy:  25.491382785322404
+epoch:  9400 loss:  0.002809218131005764 PSNR:  27.3157265145545 PSNR_noisy:  25.514145581122875
+epoch:  9600 loss:  0.0028271477203816175 PSNR:  26.945345077494395 PSNR_noisy:  25.486515213375544
+epoch:  9800 loss:  0.0027970527298748493 PSNR:  27.49044644412543 PSNR_noisy:  25.53299377841652
+epoch:  10000 loss:  0.0027811871841549873 PSNR:  26.99805324844216 PSNR_noisy:  25.557697836452824
+epoch:  10200 loss:  0.0027925646863877773 PSNR:  27.02451775391156 PSNR_noisy:  25.53996760587559
+epoch:  10400 loss:  0.002788866637274623 PSNR:  27.475709071247433 PSNR_noisy:  25.545722335532417
+epoch:  10600 loss:  0.0027265753597021103 PSNR:  26.974577209663867 PSNR_noisy:  25.643825159181354
+epoch:  10800 loss:  0.002714267699047923 PSNR:  26.99245419251821 PSNR_noisy:  25.66347316680265
+epoch:  11000 loss:  0.0027201389893889427 PSNR:  27.215656917903882 PSNR_noisy:  25.65408911886571
+epoch:  11200 loss:  0.002713125664740801 PSNR:  26.778941478715083 PSNR_noisy:  25.665301117953227
+epoch:  11400 loss:  0.0027262584771960974 PSNR:  26.789958159366 PSNR_noisy:  25.64433003392672
+epoch:  11600 loss:  0.002687429077923298 PSNR:  26.803616103897873 PSNR_noisy:  25.706629912075428
+epoch:  11800 loss:  0.002682790858671069 PSNR:  27.06991889180805 PSNR_noisy:  25.71413189164645
+epoch:  12000 loss:  0.0026323485653847456 PSNR:  26.97152412275961 PSNR_noisy:  25.79656614689421
+epoch:  12200 loss:  0.0026185389142483473 PSNR:  27.06106599299643 PSNR_noisy:  25.819410127870718
+epoch:  12400 loss:  0.0026665895711630583 PSNR:  26.8752026113906 PSNR_noisy:  25.740438381218695
+epoch:  12600 loss:  0.0026478066574782133 PSNR:  26.70943667928401 PSNR_noisy:  25.77113749341764
+epoch:  12800 loss:  0.002652266062796116 PSNR:  26.489546373810487 PSNR_noisy:  25.763829399252856
+epoch:  13000 loss:  0.002670635934919119 PSNR:  27.107062495307765 PSNR_noisy:  25.733853325316645
+epoch:  13200 loss:  0.0026128364261239767 PSNR:  27.02243445218517 PSNR_noisy:  25.82887794258359
+epoch:  13400 loss:  0.0025779427960515022 PSNR:  26.621352432859553 PSNR_noisy:  25.887267224861287
+epoch:  13600 loss:  0.0026109511964023113 PSNR:  27.044883767969708 PSNR_noisy:  25.83201262509838
+epoch:  13800 loss:  0.002609267830848694 PSNR:  27.014752586327084 PSNR_noisy:  25.83481375264469
+epoch:  14000 loss:  0.002560405060648918 PSNR:  26.789508821825766 PSNR_noisy:  25.916913274641495
+epoch:  14200 loss:  0.002545502968132496 PSNR:  26.792570168033176 PSNR_noisy:  25.94226415900872
+epoch:  14400 loss:  0.0025263261049985886 PSNR:  26.74686895878352 PSNR_noisy:  25.975105737520746
+epoch:  14600 loss:  0.002551168203353882 PSNR:  26.471114107041668 PSNR_noisy:  25.93260876779985
+epoch:  14800 loss:  0.0025596702471375465 PSNR:  26.374416841872296 PSNR_noisy:  25.91815975698665
+epoch:  15000 loss:  0.002564159920439124 PSNR:  26.913825642504342 PSNR_noisy:  25.910548800142827
+epoch:  15200 loss:  0.002537856111302972 PSNR:  26.40596407352371 PSNR_noisy:  25.955330134334126
+epoch:  15400 loss:  0.0025089767295867205 PSNR:  26.604472354093662 PSNR_noisy:  26.00503382172873
+epoch:  15600 loss:  0.0025057890452444553 PSNR:  26.463517053663637 PSNR_noisy:  26.010554842516164
+epoch:  15800 loss:  0.0025191493332386017 PSNR:  26.633273466577116 PSNR_noisy:  25.98746089792163
+epoch:  16000 loss:  0.0024948406498879194 PSNR:  26.48962425433004 PSNR_noisy:  26.02957223988414
+epoch:  16200 loss:  0.002474402543157339 PSNR:  26.61472846889472 PSNR_noisy:  26.065296498382228
+epoch:  16400 loss:  0.0024746719282120466 PSNR:  26.620015358133003 PSNR_noisy:  26.064823733910952
+epoch:  16600 loss:  0.0024937589187175035 PSNR:  26.81010590323385 PSNR_noisy:  26.031455298781168
+epoch:  16800 loss:  0.0024767403956502676 PSNR:  26.519940333152114 PSNR_noisy:  26.06119518325326
+epoch:  17000 loss:  0.002459372393786907 PSNR:  26.503227721786573 PSNR_noisy:  26.091757248270213
+epoch:  17200 loss:  0.0024689454585313797 PSNR:  26.398068357793854 PSNR_noisy:  26.07488492571558
+epoch:  17400 loss:  0.0024859635159373283 PSNR:  26.86538405764562 PSNR_noisy:  26.045052610981845
+epoch:  17600 loss:  0.0024572364054620266 PSNR:  26.545798907024157 PSNR_noisy:  26.095530506323932
+epoch:  17800 loss:  0.0024687338154762983 PSNR:  26.766239490937537 PSNR_noisy:  26.075257587563634
+epoch:  18000 loss:  0.002429627813398838 PSNR:  26.734122507621798 PSNR_noisy:  26.144602317005585
+epoch:  18200 loss:  0.0024272098671644926 PSNR:  26.669145036587572 PSNR_noisy:  26.148927052854894
+epoch:  18400 loss:  0.002445945283398032 PSNR:  26.30186440208554 PSNR_noisy:  26.11553292824422
+epoch:  18600 loss:  0.00243318360298872 PSNR:  26.583866457184516 PSNR_noisy:  26.13825109576765
+epoch:  18800 loss:  0.002479302929714322 PSNR:  26.786719551868874 PSNR_noisy:  26.056704241578814
+epoch:  19000 loss:  0.0024356949143111706 PSNR:  26.296584149164506 PSNR_noisy:  26.133771541265496
+epoch:  19200 loss:  0.0024515448603779078 PSNR:  26.757310996541687 PSNR_noisy:  26.10560143215501
+epoch:  19400 loss:  0.0023797459434717894 PSNR:  26.555409420582585 PSNR_noisy:  26.234694006018646
+epoch:  19600 loss:  0.0024255651514977217 PSNR:  26.755285031065824 PSNR_noisy:  26.151870465613314
+epoch:  19800 loss:  0.0024012005887925625 PSNR:  26.257263666757552 PSNR_noisy:  26.195715719311565
+epoch:  20000 loss:  0.002388615161180496 PSNR:  26.394729204341836 PSNR_noisy:  26.21853835351378
+epoch:  20200 loss:  0.0024313433095812798 PSNR:  26.184102692296747 PSNR_noisy:  26.141536760998466
+epoch:  20400 loss:  0.0023966289591044188 PSNR:  26.30641723179366 PSNR_noisy:  26.203992112919032
+epoch:  20600 loss:  0.002417123643681407 PSNR:  26.158156180384484 PSNR_noisy:  26.167011097407688
+epoch:  20800 loss:  0.002381890080869198 PSNR:  26.448168288816852 PSNR_noisy:  26.23078278372156
+epoch:  21000 loss:  0.0023884510155767202 PSNR:  26.228392086848558 PSNR_noisy:  26.21883673732439
+epoch:  21200 loss:  0.0023952776100486517 PSNR:  26.11644170572399 PSNR_noisy:  26.20644175543624
+epoch:  21400 loss:  0.00236212695017457 PSNR:  26.613816473482498 PSNR_noisy:  26.266967605292106
+epoch:  21600 loss:  0.0024021503049880266 PSNR:  26.176160860836145 PSNR_noisy:  26.193998155704637
+epoch:  21800 loss:  0.0023855557665228844 PSNR:  26.1949556563943 PSNR_noisy:  26.22410428070733
+epoch:  22000 loss:  0.0023636743426322937 PSNR:  26.38035228410008 PSNR_noisy:  26.264123294383587
+epoch:  22200 loss:  0.002411384368315339 PSNR:  26.05423402605526 PSNR_noisy:  26.17733547967063
+epoch:  22400 loss:  0.002401108155027032 PSNR:  26.03947470517501 PSNR_noisy:  26.1958828622901
+epoch:  22600 loss:  0.002367984503507614 PSNR:  26.327737314696343 PSNR_noisy:  26.256211134053842
+epoch:  22800 loss:  0.002414119429886341 PSNR:  25.985343195274524 PSNR_noisy:  26.1724126033985
+epoch:  23000 loss:  0.002340432023629546 PSNR:  26.54721762551395 PSNR_noisy:  26.307039832309695
+epoch:  23200 loss:  0.002348314505070448 PSNR:  26.502633191773334 PSNR_noisy:  26.29243741881984
+epoch:  23400 loss:  0.0023653043899685144 PSNR:  26.596647483999803 PSNR_noisy:  26.26112992159543
+epoch:  23600 loss:  0.002386693609878421 PSNR:  26.67418256357267 PSNR_noisy:  26.22203338403276
+epoch:  23800 loss:  0.0023184306919574738 PSNR:  26.3367496282717 PSNR_noisy:  26.348058920628148
+epoch:  24000 loss:  0.0023555082734674215 PSNR:  26.65221683085852 PSNR_noisy:  26.279153935343594
+epoch:  24200 loss:  0.0023374080192297697 PSNR:  26.564782348642346 PSNR_noisy:  26.312654825390958
+epoch:  24400 loss:  0.002305292524397373 PSNR:  26.28800999953146 PSNR_noisy:  26.37273950077489
+epoch:  24600 loss:  0.0023343218490481377 PSNR:  26.427597647713608 PSNR_noisy:  26.318392978269678
+epoch:  24800 loss:  0.0022957311011850834 PSNR:  26.367132199573952 PSNR_noisy:  26.39078979670451
+epoch:  25000 loss:  0.0022886113729327917 PSNR:  26.484560442859593 PSNR_noisy:  26.404279295312367
+epoch:  25200 loss:  0.0023384897504001856 PSNR:  26.575024444361762 PSNR_noisy:  26.31064530320813
+epoch:  25400 loss:  0.0022957301698625088 PSNR:  26.26856692125863 PSNR_noisy:  26.3907917771901
+epoch:  25600 loss:  0.0023026252165436745 PSNR:  26.25037134772697 PSNR_noisy:  26.37776749644749
+epoch:  25800 loss:  0.002308133989572525 PSNR:  26.115357830743253 PSNR_noisy:  26.3673901418367
+epoch:  26000 loss:  0.002311776392161846 PSNR:  26.222006284332352 PSNR_noisy:  26.360542077115255
+epoch:  26200 loss:  0.0023032957687973976 PSNR:  26.12248357377863 PSNR_noisy:  26.376503133502773
+epoch:  26400 loss:  0.0022737947292625904 PSNR:  26.413741285351993 PSNR_noisy:  26.432487542545907
+epoch:  26600 loss:  0.002310334239155054 PSNR:  26.498026188905378 PSNR_noisy:  26.363251795101107
+epoch:  26800 loss:  0.002297670114785433 PSNR:  26.427171509560598 PSNR_noisy:  26.38712331041185
+epoch:  27000 loss:  0.0022643953561782837 PSNR:  26.29131937585597 PSNR_noisy:  26.450477589640165
+epoch:  27200 loss:  0.002253401791676879 PSNR:  26.294465375662256 PSNR_noisy:  26.471613893773018
+epoch:  27400 loss:  0.0023100553080439568 PSNR:  26.503450517740752 PSNR_noisy:  26.363776201251873
+epoch:  27600 loss:  0.0023008626885712147 PSNR:  26.55330939053135 PSNR_noisy:  26.381093226610947
+epoch:  27800 loss:  0.0022647341247648 PSNR:  26.447172572548084 PSNR_noisy:  26.449828058203156
+epoch:  28000 loss:  0.0023298929445445538 PSNR:  26.506032770503314 PSNR_noisy:  26.32664068491217
+epoch:  28200 loss:  0.0023129817564040422 PSNR:  26.517319640361308 PSNR_noisy:  26.35827815646929
+epoch:  28400 loss:  0.0022724063601344824 PSNR:  26.376115886327476 PSNR_noisy:  26.435140078198852
+epoch:  28600 loss:  0.002255304716527462 PSNR:  26.41490810896375 PSNR_noisy:  26.467947899653378
+epoch:  28800 loss:  0.002284321002662182 PSNR:  26.43459822813694 PSNR_noisy:  26.412428856939385
+epoch:  29000 loss:  0.00224614841863513 PSNR:  26.34507295182516 PSNR_noisy:  26.48561549152809
+epoch:  29200 loss:  0.0022549028508365154 PSNR:  26.18262858844213 PSNR_noisy:  26.468721591802307
+epoch:  29400 loss:  0.002255186904221773 PSNR:  26.45015148866948 PSNR_noisy:  26.46817490334361
+epoch:  29600 loss:  0.0022594151087105274 PSNR:  26.44687953391361 PSNR_noisy:  26.460039974059182
+epoch:  29800 loss:  0.0022701872512698174 PSNR:  26.513545919382754 PSNR_noisy:  26.43938335610111
+epoch:  30000 loss:  0.0022635068744421005 PSNR:  26.149329860143258 PSNR_noisy:  26.452181752819058
+epoch:  30200 loss:  0.0022791647352278233 PSNR:  25.943937459560786 PSNR_noisy:  26.42224301401429
+epoch:  30400 loss:  0.002254027873277664 PSNR:  26.20954934577044 PSNR_noisy:  26.470407514878755
+epoch:  30600 loss:  0.0022404734045267105 PSNR:  26.208382159924703 PSNR_noisy:  26.49660196300436
+epoch:  30800 loss:  0.002251972910016775 PSNR:  26.036715406173503 PSNR_noisy:  26.47436912378417
+epoch:  31000 loss:  0.0022473339922726154 PSNR:  26.171282799992408 PSNR_noisy:  26.48332417965268
+epoch:  31200 loss:  0.0022242236882448196 PSNR:  26.290147501041105 PSNR_noisy:  26.528215293684116
+epoch:  31400 loss:  0.0023095165379345417 PSNR:  26.553570790025923 PSNR_noisy:  26.364789365557748
+epoch:  31600 loss:  0.002234660554677248 PSNR:  26.03026336322725 PSNR_noisy:  26.507884668729417
+epoch:  31800 loss:  0.0022356677800416946 PSNR:  26.06165657034294 PSNR_noisy:  26.5059269791753
+epoch:  32000 loss:  0.002218124456703663 PSNR:  26.117953601258744 PSNR_noisy:  26.540140845166587
+epoch:  32200 loss:  0.0022659325040876865 PSNR:  26.395708120845708 PSNR_noisy:  26.44753013052563
+epoch:  32400 loss:  0.0022300314158201218 PSNR:  26.090477634739102 PSNR_noisy:  26.516890298824045
+epoch:  32600 loss:  0.0022463547065854073 PSNR:  26.402604915574987 PSNR_noisy:  26.485216882576218
+epoch:  32800 loss:  0.0022342843003571033 PSNR:  25.971245695312373 PSNR_noisy:  26.50861583373026
+epoch:  33000 loss:  0.002229896141216159 PSNR:  26.375835659167606 PSNR_noisy:  26.517154049691428
+epoch:  33200 loss:  0.002214862499386072 PSNR:  26.05740852003402 PSNR_noisy:  26.546533079466627
+epoch:  33400 loss:  0.0021999867167323828 PSNR:  26.28412019609155 PSNR_noisy:  26.575799730542037
+epoch:  33600 loss:  0.002231135033071041 PSNR:  26.106580754027952 PSNR_noisy:  26.514741664554936
+epoch:  33800 loss:  0.0022036742884665728 PSNR:  26.080811584455375 PSNR_noisy:  26.568526158549815
+epoch:  34000 loss:  0.002213831525295973 PSNR:  26.00936482338092 PSNR_noisy:  26.548554324721486
+epoch:  34200 loss:  0.002212975639849901 PSNR:  26.366925641836364 PSNR_noisy:  26.550233690446646
+epoch:  34400 loss:  0.0022092494182288647 PSNR:  26.296259566036024 PSNR_noisy:  26.557552713676913
+epoch:  34600 loss:  0.00221735006198287 PSNR:  26.377195734135892 PSNR_noisy:  26.541657453436407
+epoch:  34800 loss:  0.0021978444419801235 PSNR:  26.11055865729288 PSNR_noisy:  26.580030950953123
+epoch:  35000 loss:  0.0022224276326596737 PSNR:  25.926639972907296 PSNR_noisy:  26.53172396285973
+epoch:  35200 loss:  0.0021942665334790945 PSNR:  26.28221350549589 PSNR_noisy:  26.587106414026614
+epoch:  35400 loss:  0.0022150296717882156 PSNR:  26.31804876672245 PSNR_noisy:  26.54620489989323
+epoch:  35600 loss:  0.0022072680294513702 PSNR:  26.150833336863943 PSNR_noisy:  26.561449304554415
+epoch:  35800 loss:  0.0021987350191920996 PSNR:  26.13037876040825 PSNR_noisy:  26.578271353302675
+epoch:  36000 loss:  0.002181459916755557 PSNR:  26.06781833357441 PSNR_noisy:  26.612528123078768
+epoch:  36200 loss:  0.0021800026297569275 PSNR:  26.09717826592224 PSNR_noisy:  26.615430074245126
+epoch:  36400 loss:  0.002188719343394041 PSNR:  26.240215896708857 PSNR_noisy:  26.59809952529246
+epoch:  36600 loss:  0.0022015057038515806 PSNR:  26.200244570198876 PSNR_noisy:  26.572802017962832
+epoch:  36800 loss:  0.002185269957408309 PSNR:  26.025408608678116 PSNR_noisy:  26.604949251112355
+epoch:  37000 loss:  0.002194145694375038 PSNR:  26.238733481511346 PSNR_noisy:  26.58734524624057
+epoch:  37200 loss:  0.0021758258808404207 PSNR:  26.17318045642699 PSNR_noisy:  26.623758921622773
+epoch:  37400 loss:  0.0021808657329529524 PSNR:  26.00473195873313 PSNR_noisy:  26.613710593488346
+epoch:  37600 loss:  0.002168972510844469 PSNR:  26.06490182193355 PSNR_noisy:  26.6374599181872
+epoch:  37800 loss:  0.0021592050325125456 PSNR:  26.094360940092116 PSNR_noisy:  26.657061714382802
+epoch:  38000 loss:  0.0021891454234719276 PSNR:  26.271476398151684 PSNR_noisy:  26.597253898523242
+epoch:  38200 loss:  0.0021874788217246532 PSNR:  26.039647153242345 PSNR_noisy:  26.600561966822962
+epoch:  38400 loss:  0.002256032545119524 PSNR:  26.441997656694866 PSNR_noisy:  26.466546682838086
+epoch:  38600 loss:  0.0021964646875858307 PSNR:  26.107375697743475 PSNR_noisy:  26.58275772811697
+epoch:  38800 loss:  0.0021623196080327034 PSNR:  26.133846416864927 PSNR_noisy:  26.650801220550505
+epoch:  39000 loss:  0.0021671054419130087 PSNR:  26.050829943897 PSNR_noisy:  26.64119974189112
+epoch:  39200 loss:  0.002186342841014266 PSNR:  26.006028995483955 PSNR_noisy:  26.602817123767117
+epoch:  39400 loss:  0.002175323199480772 PSNR:  26.20231297238049 PSNR_noisy:  26.62476240633024
+epoch:  39600 loss:  0.0021623626817017794 PSNR:  26.29735734291304 PSNR_noisy:  26.650714741122258
+epoch:  39800 loss:  0.0021649959962815046 PSNR:  26.062935760372135 PSNR_noisy:  26.64542888766711
+PSNR of output image is:  26.06293509740619
+(1, 3, 256, 256) (1, 3, 256, 256) (3, 256, 256)
+Experiment done
