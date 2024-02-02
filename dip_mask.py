@@ -125,8 +125,8 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         pad='reflection', 
         act_fun='LeakyReLU').type(dtype)
     ## torch load existing model from path 
-    state_dict = torch.load(f'data/denoising/Set14/mask/{ino}/vanilla/0.1/model_early{ino}.pth')    
-    net.load_state_dict(state_dict)
+    # state_dict = torch.load(f'data/denoising/Set14/mask/{ino}/vanilla/0.1/model_early{ino}.pth')    
+    # net.load_state_dict(state_dict)
     ## apply normal initialization 
     #net.apply(init_weights)
     ## multiply all the initial weights by 5
@@ -160,7 +160,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
           
 
     #outdir = f'data/denoising/Dataset/mask/{ino}/unet/{mask_opt}/{prior_sigma}/{kl}'
-    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}/early'
+    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}'
     print(f"Output directory: {outdir}")
     os.makedirs(f'{outdir}/out_images/', exist_ok=True)
 
@@ -280,29 +280,3 @@ if __name__ == "__main__":
     
     
         
-## for image1, noisy psnr is 18.75
-# for image2, noisy psnr is 19.32
-# for image3, noisy psnr is 20.17      
-# for image1, clean psnr is 26.9
-# for image2, clean psnr is 25.7
-# for image3, clean psnr is 29.29
-    
-    
-
-## for image-4, noisy psnr is 20.15
-## for image-5, noisy psnr is 20.09
-## for image-5, noisy psnr is 20.22
-
-
-## for image-7, noisay psnr is 19.92
-## for image-7, clean psnr is 25.018
-## for image-8, noisy psnr is 20.40
-## for image-8, clean psnr is 22.05
-## for image-10, noisy psnr is 17.64
-## for image-10 clean psnr is 22.23
-
-
-## for image-11, noisay psnr is 18.69
-## for image-12, noisy psnr is 20.8
-## for image-13, noisy psnr is 20.45
-## for image-11, clean psnr is 21.45
