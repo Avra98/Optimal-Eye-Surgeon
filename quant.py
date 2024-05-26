@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from utils.denoising_utils import *
 from models import *
+from scipy.ndimage import gaussian_filter
 from utils import *
 import pickle as cPickle
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
@@ -100,17 +101,19 @@ def quant_initialization(model,prior_sigma,q=3):
     return w0, p,prior
 
 
-def learn_quantization_probabilities_dip(model,net_input,img_var,noise_var, num_steps, lr,ino, q=3,kl=1e-5,prior_sigma=0.0,sparsity=0.5):
+def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=0.0, sparsity=0.5):
     device = next(model.parameters()).device
     mse = torch.nn.MSELoss().type(dtype)
     img_var = np_to_torch(img_var).type(dtype)
     noise_var = np_to_torch(noise_var).type(dtype)
+    
     # Initialize quantization probabilities (p) and make sure they require gradients
     _, p, _ = quant_initialization(model, 1.0, q)
+    numel = p.numel()
     p.requires_grad_(True)
     optimizer_p = torch.optim.Adam([p], lr=lr)
     num_realizations =5
-    prior=sigmoid(prior_sigma)
+    prior = sigmoid(prior_sigma)
 
     all_logits = []
     quant_loss =[]
@@ -138,10 +141,15 @@ def learn_quantization_probabilities_dip(model,net_input,img_var,noise_var, num_
         #reg = torch.sigmoid(p).sum()
         # with torch.no_grad():
         #     print(output.shape,noise_var.shape)
-        reg=  (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) + (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
+        reg = (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) +
+               (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
+        # p_mean = torch.sigmoid(p).mean()
+        # reg =  (p_mean * torch.log((p_mean+1e-6)/prior) + (1-p_mean) * torch.log((1-p_mean+1e-6)/(1-prior)))/kl
         #reg = torch.abs(torch.sigmoid(p)).sum()
 
-            # Compute loss based on the dissimilarity between quantized model output and noisy image
+        # reg = torch.abs(torch.sum(torch.sigmoid(p))-sparsity*numel)
+
+        # Compute loss based on the dissimilarity between quantized model output and noisy image
         #quantization_loss = mse(output, noise_var) + kl*reg
         quantization_loss = mse(output,noise_var) + kl*reg
         quantization_loss.backward()
@@ -199,19 +207,15 @@ def learn_quantization_probabilities_dip(model,net_input,img_var,noise_var, num_
     # plt.imshow(out_np[0,:,:])
     # plt.savefig(f'output_{ino}.png')
     
+    os.makedirs(f'histogram_centeredl1_{ino}', exist_ok=True) 
 
-
-
-
-
-
-    # Plot a histogram for all the quantized weights
-    # plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
-    # plt.title(f'Distribution of p for sparsity level {sparsity}')
-    # plt.xlabel('Value of p')
-    # plt.ylabel('Frequency')
-    # plt.savefig(f'all_layers_histogram_q{sparsity}_{kl}.png')
-    # plt.clf()
+    #Plot a histogram for all the quantized weights
+    plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
+    plt.title(f'Distribution of p for sparsity level {sparsity}')
+    plt.xlabel('Value of p')
+    plt.ylabel('Frequency')
+    plt.savefig(f'histogram_centeredl1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
+    plt.clf()
 
     return p,quant_loss
 
@@ -414,7 +418,9 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
         out = masked_model(net_input)
 
         total_loss = mse(out, noise_var)
-        
+        with torch.no_grad():
+            if epoch==0:
+                print("total_loss is:",total_loss)
         total_loss.backward()
         # end_time = time.time()
         # duration = end_time - start_time
@@ -737,3 +743,171 @@ def weights_init(m, scale=1.0):
         m.weight.data.mul_(scale)
         if m.bias is not None:
             m.bias.data.mul_(scale)            
+
+
+
+def learn_quantization_probabilities_dip_deblur(model,net_input,img_var,noise_var, num_steps, lr,ino, q=3,kl=1e-5,prior_sigma=0.0,sparsity=0.5):
+    device = next(model.parameters()).device
+    mse = torch.nn.MSELoss().type(dtype)
+    img_var = np_to_torch(img_var).type(dtype)
+    noise_var = np_to_torch(noise_var).type(dtype)
+    sigma=2.0
+    # Initialize quantization probabilities (p) and make sure they require gradients
+    _, p, _ = quant_initialization(model, 1.0, q)
+    numel=p.numel()
+    p.requires_grad_(True)
+    optimizer_p = torch.optim.Adam([p], lr=lr)
+    num_realizations =5
+    prior=sigmoid(prior_sigma)
+
+    all_logits = []
+    quant_loss =[]
+
+    for epoch in range(num_steps):
+        
+        model_copy = copy.deepcopy(model)
+        for param in model_copy.parameters():
+            param.requires_grad = False
+        quantization_loss_accum = 0.0
+
+#        for realization in range(num_realizations):
+        optimizer_p.zero_grad()
+        k = 0
+        for i, param in enumerate(model_copy.parameters()):
+            t = len(param.view(-1))
+            logits = p[:, k:(k+t)].t()
+            quantized_weights = soft_quantize(torch.sigmoid(logits), q, temperature=0.2)
+            #print("quantized_weights is: ", quantized_weights.mean())
+            param.mul_(quantized_weights.view(param.data.shape))
+            k += t
+
+            # Forward pass after quantization
+        output = model_copy(net_input)
+        blurred_out = convolve_with_gaussian_torch(output, sigma)
+        #reg = torch.sigmoid(p).sum()
+        # with torch.no_grad():
+        #     print(output.shape,noise_var.shape)
+        reg =  (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) + (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
+        #reg = torch.abs(torch.sigmoid(p)).sum()
+        #reg = torch.abs(torch.sum(torch.sigmoid(p))-sparsity*numel)
+
+            # Compute loss based on the dissimilarity between quantized model output and noisy image
+        #quantization_loss = mse(output, noise_var) + kl*reg
+        quantization_loss = mse(output,noise_var) + kl*reg
+        quantization_loss.backward()
+        optimizer_p.step()
+        # with torch.no_grad():
+        #     print(reg,quantization_loss)
+
+
+        #quantization_loss_avg = quantization_loss_accum / num_realizationsx
+        
+
+        # Update quantization probabilities using gradient descent
+        
+        with torch.no_grad():
+            if epoch % 1000 == 0:
+                print("epoch: ", epoch, "quantization_loss: ", quantization_loss.item())
+                quant_loss.append(quantization_loss.item()) 
+                print("p mean is:",p.mean())
+    
+
+        if epoch == num_steps - 1:
+            logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
+            all_logits.extend(logits_flat)
+
+    # # Update the actual model based on the quantized weights
+    # with torch.no_grad():
+    #     if mask_opt=='single':          
+    #         out = draw_one_mask(p, model,net_input)
+    #     elif mask_opt=='multiple':
+    #         print("here")
+    #         out = draw_multiple_masks(p, model,net_input)
+    #     else:
+    #         out = deterministic_rounding(p, model,net_input)
+
+
+        # k = 0
+        # for i, param in enumerate(model.parameters()):
+        #     t = len(param.view(-1))
+        #     logits = p[:, k:(k+t)].t()
+        #     quantized_weights = soft_quantize(torch.sigmoid(logits), q, temperature=0.2)
+        #     hard_quant = torch.round(quantized_weights)
+        #     print(hard_quant)
+        #     param.data = param.data * hard_quant.view(param.data.shape)
+        #     k += t
+        #     all_quantized_weights.extend(quantized_weights.cpu().numpy().flatten())
+
+
+    # out = model(net_input)
+    # out_np = out.detach().cpu().numpy()[0]
+    # img_np = img_var.detach().cpu().numpy()
+    # psnr_gt  = compare_psnr(img_np, out_np)
+    # print("PSNR of output image is: ", psnr_gt)
+    ## save the figure 
+    # plt.figure()
+    # plt.imshow(out_np[0,:,:])
+    # plt.savefig(f'output_{ino}.png')
+    
+    # os.makedirs(f'histogram_l1_{ino}', exist_ok=True) 
+
+    # #Plot a histogram for all the quantized weights
+    # plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
+    # plt.title(f'Distribution of p for sparsity level {sparsity}')
+    # plt.xlabel('Value of p')
+    # plt.ylabel('Frequency')
+    # plt.savefig(f'histogram_l1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
+    # plt.clf()
+
+    return p,quant_loss
+
+
+def gaussian_kernel(size, sigma):
+    """
+    Generates a 2D Gaussian kernel.
+    """
+    ax = np.arange(-size // 2 + 1., size // 2 + 1.)
+    xx, yy = np.meshgrid(ax, ax)
+    kernel = np.exp(-(xx**2 + yy**2) / (2. * sigma**2))
+    return kernel / np.sum(kernel)
+
+def convolve_with_gaussian(image_np, sigma):
+    """
+    Convolves a 3-channel image with a Gaussian kernel.
+    Ensures the output image has the same size as the input.
+    """
+    if image_np.ndim == 3 and image_np.shape[0] == 3:  # Check if image has 3 channels
+        blurred_image = np.zeros_like(image_np)
+        kernel_size = int(sigma * 3) * 2 + 1  # Kernel size
+        for c in range(3):
+            blurred_image[c,...] = gaussian_filter(image_np[c,...], sigma=sigma, mode='reflect', truncate=3.0)
+    else:
+        kernel_size = int(sigma * 3) * 2 + 1
+        blurred_image = gaussian_filter(image_np, sigma=sigma, mode='reflect', truncate=3.0)
+    return blurred_image
+
+def gaussian_kernel_torch(kernel_size, sigma):
+    """
+    Generates a 2D Gaussian kernel using PyTorch.
+    """
+    ax = torch.linspace(-kernel_size // 2 + 1, kernel_size // 2, kernel_size)
+    xx, yy = torch.meshgrid(ax, ax, indexing='ij')
+    kernel = torch.exp(-(xx**2 + yy**2) / (2 * sigma**2))
+    kernel /= kernel.sum()
+    return kernel
+
+def convolve_with_gaussian_torch(image_tensor, sigma):
+    """
+    Convolves an image tensor with a Gaussian kernel using PyTorch.
+    Assumes the image tensor is in BCHW format.
+    """
+    batch_size, channels, _, _ = image_tensor.shape
+    kernel_size = int(sigma * 3) * 2 + 1
+    kernel = gaussian_kernel_torch(kernel_size, sigma).to(image_tensor.device)
+    kernel = kernel.expand(channels, 1, kernel_size, kernel_size)
+    
+    # Ensure the kernel is [out_channels, in_channels/groups, height, width]
+    padding = kernel_size // 2
+    blurred_image = F.conv2d(image_tensor, kernel, padding=padding, groups=channels)
+    
+    return blurred_image

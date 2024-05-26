@@ -13,7 +13,6 @@ def load_npz_file(file_path):
 def plot_npz_files(ino):
     # directory = f'data/denoising/Set14/mask/{ino}/pat/14_0.2/'
     directory_imp = f'data/denoising/Dataset/mask/{ino}/pat/14_0.2/'
-    directory_oes =
     files = natsorted([file for file in os.listdir(directory_imp) if file.endswith('.npz')])
 
     if not files:

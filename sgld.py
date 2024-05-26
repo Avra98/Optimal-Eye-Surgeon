@@ -50,18 +50,15 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             noise = torch.randn(n.size()).to(n.device) * param_noise_sigma * args.lr
             # Add the noise to the parameter
             n.data = n.data + noise
-
-    
-    
+ 
     img_np_list=[]
     img_noisy_np_list=[]
-    noisy_psnr_list=[]
     psrn_noisy_last = 0
     # train_folder = 'result/Urban100/image_SRF_2/train'
     # train_folder = 'data/denoising/Dataset'
     # train_noisy_folder = 'data/denoising/Dataset/train_noisy_{}'.format(sigma)
-    train_folder = 'data/denoising/face'
-    train_noisy_folder = 'data/denoising/face/train_noisy_{}'.format(sigma)
+    train_folder = 'data/denoising/Set14'
+    train_noisy_folder = 'data/denoising/Set14/train_noisy_{}'.format(sigma)
 
     os.makedirs(train_noisy_folder, exist_ok=True)
 #    for image in images:
@@ -76,7 +73,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
 #        img_np_list.append(img_np)
 #        img_noisy_np_list.append(img_noisy_np)  
 
-    for i, file_path in enumerate(glob.glob(os.path.join(train_folder, '*.jpg'))):
+    for i, file_path in enumerate(glob.glob(os.path.join(train_folder, '*.png'))):
         if i == ino:  # we start counting from 0, so the 3rd image is at index 2
             # Get the filename (without extension) for use in messages
             filename = os.path.splitext(os.path.basename(file_path))[0]
@@ -99,7 +96,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             
 
             break  # exit the loop
-
+    noisy_psnr_list = []
     noisy_psnr = compare_psnr(img_np,img_noisy_np)
     noisy_psnr_list.append(noisy_psnr)
     print(f'Starting vanilla DIP on {ino} using {optim}(sigma={sigma},lr={lr},decay={weight_decay},beta={beta})')
@@ -110,7 +107,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     # Modify input and output depths
     input_depth = 32   
     output_depth = 3
-    param_noise_sigma = 4
+    param_noise_sigma = 0.5
 
 
     # Adjust loss function
@@ -183,7 +180,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         # psnr_list.append(psrn_gt)
         return psrn_gt,out_np
 
-    outdir = f'data/denoising/face/{ino}/sgld'
+    outdir = f'data/denoising/Set14/{ino}/sgld'
     os.makedirs(f'{outdir}', exist_ok=True)
     for j in range(max_steps):
         optimizer.zero_grad()

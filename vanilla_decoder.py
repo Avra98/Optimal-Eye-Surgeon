@@ -55,8 +55,8 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     img_noisy_np_list=[]
     noisy_psnr_list=[]
     # train_folder = 'result/Urban100/image_SRF_2/train'
-    train_folder = 'data/denoising/Dataset'
-    train_noisy_folder = 'data/denoising/Dataset/train_noisy_{}'.format(sigma)
+    train_folder = 'data/denoising/Set14'
+    train_noisy_folder = 'data/denoising/Set14/train_noisy_{}'.format(sigma)
 
     os.makedirs(train_noisy_folder, exist_ok=True)
 
@@ -64,20 +64,16 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         if i == ino:  # we start counting from 0, so the 3rd image is at index 2
             # Get the filename (without extension) for use in messages
             filename = os.path.splitext(os.path.basename(file_path))[0]
-            imsize = -1
-            
+            imsize = -1            
             img_pil = Image.open(file_path)
             #img_pil = crop_image(get_image(file_path, imsize)[0], d=32)
             img_pil = resize_and_crop(img_pil, max(img_pil.size))
             img_np = pil_to_np(img_pil)
             print(img_np.shape)
-
             img_noisy_np = img_np +np.random.normal(scale=sigma, size=img_np.shape)
             img_noisy_np = np.clip(img_noisy_np , 0, 1).astype(np.float32)
-
             img_np_list.append(img_np)
-            img_noisy_np_list.append(img_noisy_np)
-            
+            img_noisy_np_list.append(img_noisy_np)           
             img_noisy_pil = np_to_pil(img_noisy_np)
             img_noisy_pil.save(os.path.join(train_noisy_folder, filename + '.png'))
             break  # exit the loop
@@ -136,7 +132,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     sharp=[]
     psnr_list=[]
     
-
     def closure_sgd(net_input,img_var,noise_var):
         img_var = np_to_torch(img_var).type(dtype)
         noise_var = np_to_torch(noise_var).type(dtype)
@@ -155,7 +150,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         return psnr_gt,out_np
 
     fileid = f'{optim}(sigma={sigma},lr={lr},decay={weight_decay},beta={beta},reg={reg})'
-    outdir = f'data/denoising/Dataset/mask/{ino}/{fileid}/deepdecoder/{sigma}'
+    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/'
     #outdir = f'data/denoising/face/baselines/{ino}/decoder'
     os.makedirs(f'{outdir}', exist_ok=True)
     for j in range(max_steps):
@@ -164,13 +159,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         psnr_noisy = compare_psnr(img_noisy_np, out[0,:,:,:])
 
         if j%show_every==0 and j!=0:
-            if psnr_noisy - psrn_noisy_last < -2: 
-                print('Falling back to previous checkpoint.')
-                for new_param, net_param in zip(last_net, net.parameters()):
-                    net_param.detach().copy_(new_param.cuda())
-            else:
-                last_net = [x.detach().cpu() for x in net.parameters()]
-                psrn_noisy_last = psnr_noisy
             print(f"At step '{j}', psnr is '{psnr}', noisy psnr is '{psnr_noisy}'")
             psnr_list.append(psnr)  
     ##plot and save psnr list in train folder with figure name including ino 

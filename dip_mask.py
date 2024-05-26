@@ -111,8 +111,14 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     print(img_np.shape,img_noisy_np.shape,net_input.shape)
     net = skip(
         input_depth, output_depth,
-        num_channels_down = [16, 32, 64, 128, 128, 128][:num_layers],
-        num_channels_up   = [16, 32, 64, 128, 128, 128][:num_layers],
+        num_channels_down = [16, 32, 64, 128, 128, 128,128, 128, 128, 128][:num_layers],
+        num_channels_up   = [16, 32, 64, 128, 128, 128,128, 128, 128, 128][:num_layers],
+        # num_channels_down = [32, 64, 128, 256, 256, 256,256, 256, 256, 256][:num_layers],
+        # num_channels_up   = [32, 64, 128, 256, 256, 256,256, 256, 256, 256][:num_layers],
+        # num_channels_down = [64, 128, 256, 512, 512, 512,512, 512, 512, 512][:num_layers],
+        # num_channels_up   = [64, 128, 256, 512, 512, 512,512, 512, 512, 512][:num_layers],
+        # num_channels_down = [128, 256, 512, 1024, 1024, 1024,1024, 1024, 1024, 1024][:num_layers],
+        # num_channels_up   = [128, 256, 512, 1024, 1024, 1024,1024, 1024, 1024, 1024][:num_layers],
         num_channels_skip = [0]*num_layers,
         upsample_mode='nearest',
         downsample_mode='avg',
@@ -124,6 +130,10 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         need_bias=True, 
         pad='reflection', 
         act_fun='LeakyReLU').type(dtype)
+    
+    ## print number of network parameters
+    # s  = sum(np.prod(list(p.size())) for p in net.parameters())
+    # print ('Number of params: %d' % s)
     ## torch load existing model from path 
     # state_dict = torch.load(f'data/denoising/Set14/mask/{ino}/vanilla/0.1/model_early{ino}.pth')    
     # net.load_state_dict(state_dict)
@@ -160,10 +170,9 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
           
 
     #outdir = f'data/denoising/Dataset/mask/{ino}/unet/{mask_opt}/{prior_sigma}/{kl}'
-    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}'
+    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}/{num_layers}layers/l1_cent_smalllrs'
     print(f"Output directory: {outdir}")
     os.makedirs(f'{outdir}/out_images/', exist_ok=True)
-
 
     m=0
     p,quant_loss = learn_quantization_probabilities_dip(net,net_input, img_np, img_noisy_np, num_steps,
@@ -179,6 +188,9 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         cPickle.dump(net_input, f)
     with open(f'{outdir}/mask_{ino}.pkl', 'wb') as f:
        cPickle.dump(mask, f)
+    ## save p
+    with open(f'{outdir}/p_{ino}.pkl', 'wb') as f:
+        cPickle.dump(p, f)     
     #     
                 
     with torch.no_grad():
@@ -190,9 +202,11 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             out = deterministic_rounding(p, net,net_input,sparsity=args.sparsity)
 
 
-        out_np = out.detach().cpu().numpy()[0]
+        # out_np = out.detach().cpu().numpy()[0]
+        # img_np = img_var.detach().cpu().numpy()[0]
+        out_np = torch_to_np(out)
         img_var = np_to_torch(img_np)
-        img_np = img_var.detach().cpu().numpy()[0]
+        img_np = torch_to_np(img_var)
 
         print(out_np.shape, img_np.shape, img_noisy_np.shape)
         psnr_gt  = compare_psnr(img_np, out_np)
@@ -211,15 +225,15 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             plt.axis('off')
             plt.savefig(path, bbox_inches='tight', pad_inches=0)
             plt.close()
-            # plt.hist(quant_weight, bins=50, alpha=0.5, label='Quantized Weights')
-            # plt.title(f'Quantized Weights Histogram')
-            # plt.xlabel('Quantized Weight Values')
-            # plt.ylabel('Frequency')
-            # plt.legend()
+        # plt.hist(p.cpu().numpy(), bins=50, alpha=0.5, label='Logits')
 
-            # # Save the histogram plot in the same directory as other figures
-            # plt.savefig(f'{outdir}/out_images/quant_weight_histogram_{ino}.png') 
-            # plt.close()  
+        # plt.title(f'Logits Histogram')
+        # plt.xlabel('Logit (p) Values')
+        # plt.ylabel('Frequency')
+        # plt.legend()
+        # # Save the histogram plot in the same directory as other figures
+        # plt.savefig(f'{outdir}/out_images/quant_weight_histogram_{ino}.png') 
+        # plt.close()  
 
         plt.plot(range(0, len(quant_loss) * 1000, 1000), quant_loss, marker='o', linestyle='-')
         plt.title('Quantization Loss Over Training Epochs')

@@ -45,7 +45,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     #     MSE = np.mean(np.abs(img1-img2)**2)
     #     psnr=10*np.log10(np.max(np.abs(img1))**2/MSE)
     #     return psnr 
-
     
     img_np_list=[]
     img_noisy_np_list=[]
@@ -133,12 +132,12 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     m=0
     #     
     if trans_type == "pai":
-        fileid = f'{optim}(sigma=0.1,lr={lr},decay={weight_decay},beta={beta})'
+        #fileid = f'{optim}(sigma=0.1,lr={lr},decay={weight_decay},beta={beta})'
         #outdir = f'data/denoising/Set14/mask/{ino}/{fileid}/{mask_opt}/{prior_sigma}/{kl}'
         #outdir = f'data/denoising/face/mask/{ino}/unet/det/selected/{sparsity}/{kl}'
         #outdir =  f'data/denoising/Dataset/mask/{ino}/sparsity/unet/det/{sparsity}/{kl}'
         #outdir = f'data/denoising/Set14/mask/{ino}/sparsity/det/0.05/{kl}'
-        outdir = f'data/denoising/Set14/mask/0/sparsity/det/0.05/1e-09/early'
+        outdir = f'data/denoising/Set14/mask/0/sparsity/det/0.05/1e-09'
 
         #outdir = f'data/denoising/Set14/mask/{ino}/{fileid}/{mask_opt}/clean_img/{prior_sigma}/{kl}'
         #outdir = f'data/denoising/Set14/mask/{ino}/{fileid}/{mask_opt}/chess_img/-0.8/{kl}'
@@ -154,9 +153,9 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         with open(f'{outdir}/mask_{ino}.pkl', 'rb') as f:
             mask = cPickle.load(f)
     elif trans_type == "pat":
-        #outdir = f'data/denoising/Set14/mask/{ino}/pat/14_0.2'
+        outdir = f'data/denoising/Set14/mask/{ino}/pat/14_0.2'
         #outdir = f'data/denoising/face/mask/{ino}/pat/14_0.2'
-        outdir = f'data/denoising/Set14/mask/0/pat/early/14_0.2'
+        #outdir = f'data/denoising/Set14/mask/0/pat/early/14_0.2'
         #outdir = f'data/denoising/Set14/mask/0/pat/14_0.2'
         #outdir = f'data/denoising/Set14/mask/0/pat/clean/14_0.2'
         #outdir = f'data/denoising/Set14/mask/{ino}/pat/14_0.2'
@@ -171,9 +170,8 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         mask = torch.load(f'{outdir}/mask_final.pth')
     masked_model = mask_network(mask,masked_model)
 
-
-    psnr,out =  train_sparse(masked_model,net_input_list,mask, img_np, img_noisy_np,max_step=args.max_steps,show_every=args.show_every,device=args.device_id)
-    ## save the output image and psnr in the outdir folder               
+    psnr, out = train_sparse(masked_model, net_input_list, mask, img_np, img_noisy_np, max_step=args.max_steps, show_every=args.show_every, device=args.device_id)
+    # save the output image and psnr in the outdir folder
 
     with torch.no_grad():
 

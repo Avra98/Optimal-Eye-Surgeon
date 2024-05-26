@@ -157,7 +157,8 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         # optimizer = SAM(net.parameters(), base_opt, rho=args.reg, adaptive=False, lr=args.lr, weight_decay = weight_decay,momentum = beta)      
     #outdir = f'data/denoising/Dataset/mask/{ino}/unet/{mask_opt}/{prior_sigma}/{kl}'
     #outdir = f'data/denoising/Set14/mask/{ino}/SAM(sigma=0.1,lr=0.01,decay=0,beta=0)/{mask_opt}/{prior_sigma}/{kl}'
-    outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}'
+    #outdir = f'data/denoising/Set14/mask/{ino}/sparsity/{mask_opt}/{sparsity}/{kl}'
+    outdir = 'data/denoising/Set14/mask/0/SAM(sigma=0.1,lr=0.01,decay=0,beta=0)/det/-1.8/1e-09'
     #outdir = f'data/denoising/Set14/mask/{ino}/diff_p0/{mask_opt}/{sparsity}/05/{kl}'
     #outdir = f'data/denoising/Set14/mask/{ino}/sparsity_unbal/{mask_opt}/{sparsity}/{kl}'
     #outdir = f'data/denoising/Set14/mask/{ino}/l1/{mask_opt}/0.05/05/{kl}'
@@ -173,13 +174,11 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     os.makedirs(f'{outdir}/out_sparsenet/{sigma}', exist_ok=True)
     print(f"Output directory where results stored: {outdir}/out_sparsenet/{sigma}")
 
-
     m=0
     #     
-
     # load masked model and net_input_list from the outdir folder
-    # with open(f'{outdir}/masked_model_{ino}.pkl', 'rb') as f:
-    #     masked_model = cPickle.load(f)
+    with open(f'{outdir}/masked_model_{ino}.pkl', 'rb') as f:
+         masked_model = cPickle.load(f)
     with open(f'{outdir}/net_input_list_{ino}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
     # load the saved mask

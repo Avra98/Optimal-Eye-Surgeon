@@ -8,7 +8,7 @@ def skip(
         filter_size_down=3, filter_size_up=3, filter_skip_size=1,
         need_sigmoid=True, need_bias=True, 
         pad='zero', upsample_mode='nearest', downsample_mode='stride', act_fun='LeakyReLU', 
-        need1x1_up=True):
+        need1x1_up=True) -> nn.Sequential:
     """Assembles encoder-decoder with skip connections.
 
     Arguments:
@@ -18,6 +18,8 @@ def skip(
         downsample_mode (string): 'stride|avg|max|lanczos2' (default: 'stride')
 
     """
+    ## print num_channels_down, num_channels_up, num_channels_skip
+    #print('num_channels_down:', num_channels_down, 'num_channels_up:', num_channels_up, 'num_channels_skip:', num_channels_skip)
     assert len(num_channels_down) == len(num_channels_up) == len(num_channels_skip)
 
     n_scales = len(num_channels_down) 

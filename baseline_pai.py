@@ -48,8 +48,8 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     img_np_list=[]
     img_noisy_np_list=[]
     noisy_psnr_list=[]
-    train_folder = 'data/denoising/Dataset'
-    train_noisy_folder = 'data/denoising/Dataset/train_noisy_{}'.format(sigma)
+    train_folder = 'data/denoising/Set14'
+    train_noisy_folder = 'data/denoising/Set14/train_noisy_{}'.format(sigma)
 
     os.makedirs(train_noisy_folder, exist_ok=True)
 

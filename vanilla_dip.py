@@ -9,6 +9,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
+from utils.sharpness import *
 from models import *
 from quant import *
 from ptflops import get_model_complexity_info
@@ -29,7 +30,7 @@ from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 
 import argparse
 
-def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2, num_layers: int = 4, show_every: int=1000, device_id: int = 0,beta: float = 0.0,ino : int =0,weight_decay: float = 0.0):
+def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.1, num_layers: int = 6, show_every: int=1000, device_id: int = 0,beta: float = 0.0,ino : int =0,weight_decay: float = 0.0):
 
     torch.cuda.set_device(device_id)
     torch.cuda.current_device() 
@@ -38,21 +39,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         min_val = np.min(img)
         max_val = np.max(img)
         return (img - min_val) / (max_val - min_val)  
-
-    # def compare_psnr(img1, img2):
-    #     MSE = np.mean(np.abs(img1-img2)**2)
-    #     psnr=10*np.log10(np.max(np.abs(img1))**2/MSE)
-    #     return psnr 
-    
-
-    # def compute_svd(conv_layer):
-    #     weights = conv_layer.weight.data
-    #     if len(weights.shape) == 4:  # Convolutional layers have 4-dimensional weights
-    #         weights = weights.view(weights.size(0), -1)
-    #     _, s, _ = torch.svd(weights)
-    #     return s   
-    
-    
+       
     img_np_list=[]
     img_noisy_np_list=[]
     noisy_psnr_list=[]
@@ -61,17 +48,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     train_noisy_folder = 'data/denoising/Set14/train_noisy_{}'.format(sigma)
 
     os.makedirs(train_noisy_folder, exist_ok=True)
-#    for image in images:
-#        imagename = "image_" + str(image) + ".png"
-#        fname = 'data/denoising/Dataset' + "/" + imagename
-#        imsize = -1
-#        img_pil = crop_image(get_image(fname, imsize)[0], d=32)
-#        img_np = pil_to_np(img_pil)
-#        img_np = img_np[0, :, :]
-#        img_noisy_np = img_np + sigma*np.random.normal(scale=sigma, size=img_np.shape)
-#        img_noisy_np = normalize_image(img_noisy_np)                
-#        img_np_list.append(img_np)
-#        img_noisy_np_list.append(img_noisy_np)  
 
     for i, file_path in enumerate(glob.glob(os.path.join(train_folder, '*.png'))):
         if i == ino:  # we start counting from 0, so the 3rd image is at index 2
@@ -83,7 +59,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             #img_pil = crop_image(get_image(file_path, imsize)[0], d=32)
             img_pil = resize_and_crop(img_pil, max(img_pil.size))
             img_np = pil_to_np(img_pil)
-
+            print("img_np shape:",img_np.shape)
             img_noisy_np = img_np +np.random.normal(scale=sigma, size=img_np.shape)
             img_noisy_np = np.clip(img_noisy_np , 0, 1).astype(np.float32)
             img_np_list.append(img_np)
@@ -91,8 +67,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             
             img_noisy_pil = np_to_pil(img_noisy_np)
             img_noisy_pil.save(os.path.join(train_noisy_folder, filename + '.png'))
-            
-
+        
             break  # exit the loop
 
     noisy_psnr = compare_psnr(img_np,img_noisy_np)
@@ -100,8 +75,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     noisy_psnr_list.append(noisy_psnr)
     print(f'Starting vanilla DIP on {ino} using {optim}(sigma={sigma},lr={lr},decay={weight_decay},beta={beta})')
     print(f"Noisy PSNR is '{noisy_psnr}'")
-
-            
 
     # Modify input and output depths
     input_depth = 32   
@@ -111,12 +84,10 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     mse = torch.nn.MSELoss().type(dtype)
     # img_var_list = [np_to_torch(img_np).type(dtype) for img_np in img_np_list]
     # noise_var_list = [np_to_torch(img_mask_np).type(dtype) for img_mask_np in img_noisy_np_list]
-
     INPUT = "noise"
         
     net_input= get_noise(input_depth, INPUT, img_np.shape[1:]).type(dtype) 
     print("input dim:", net_input.shape)# [1, 3, 256, 256]
-    # net_input = 
     net = skip(
         input_depth, output_depth,
         num_channels_down = [16, 32, 64, 128, 128, 128][:num_layers],
@@ -132,15 +103,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         need_bias=True, 
         pad='reflection', 
         act_fun='LeakyReLU').type(dtype)
-    # macs, params = get_model_complexity_info(net, (1,32, 512, 512), as_strings=True,
-    #                                        print_per_layer_stat=True, verbose=True)
-    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
-    # flops, macs, params = calculate_flops(model=net, 
-    #                                   input_shape=(1,3,512,512),
-    #                                   output_as_string=True,
-    #                                   output_precision=4)
-    # print("dense UnetFLOPs:%s   MACs:%s   Params:%s \n" %(flops, macs, params))
+
     # net = skip(num_input_channels=input_depth,
     #             num_output_channels=3,
     #             num_channels_down=[128] * 5,
@@ -153,7 +116,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     #             pad='reflection',
     #             act_fun='LeakyReLU').type(dtype)
     
-    # print_nonzeros(net)
+    #print_nonzeros(net)
 
     # net = cnn( num_input_channels=input_depth, num_output_channels=output_depth,
     #    num_layers=3,
@@ -180,35 +143,18 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     
 
     def closure_sgd(net_input,img_var,noise_var):
-
+        optimizer.zero_grad() 
         img_var = np_to_torch(img_var).type(dtype)
         noise_var = np_to_torch(noise_var).type(dtype)
         #start_time = time.time()  
         out = net(net_input)
-
         # with torch.no_grad():
         #     print(net_input.shape,img_var.shape,out.shape)
         total_loss = mse(out, noise_var)
-
-
         # if optim=="SGD" or  optim=="ADAM":      
-        optimizer.zero_grad() 
-          
+                
         total_loss.backward()
-        # end_time = time.time()
-        # duration = end_time - start_time
-        # print("duration is:",duration) 
-
-        optimizer.step()
-       
-        # end_time = time.time()
-        # duration = end_time - start_time
-        #print("duration is:",duration)        
-        # elif optim=="SAM":
-        #     total_loss.backward() 
-        #     optimizer.first_step(zero_grad=True)
-        #     mse(net(net_input), noise_var).backward()
-        #     optimizer.second_step(zero_grad=True)                
+        optimizer.step()               
         out_np = out.detach().cpu().numpy()
         img_np = img_var.detach().cpu().numpy()
         psnr_gt  = compare_psnr(img_np, out_np)
@@ -223,34 +169,10 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     for j in range(max_steps):
         #optimizer.zero_grad()
         psnr,out = closure_sgd( net_input, img_np, img_noisy_np)
-        if j ==2000:
-            ## save the model
-            torch.save(net.state_dict(), f'{outdir}/model_early{ino}.pth')
-            
-
         if j%show_every==0 and j!=0:
-            #print(psnr_lists[0][-1],psnr_lists[1][-1],psnr_lists[-1][-1]) 
-            #print(psnr_lists[0][-1])   
-            #e1,e2= get_hessian_eigenvalues(net, ind_loss, net_input_list, img_np_list, img_noisy_np_list,neigs=2)
-            #jac = get_jac_norm(net,net_input_list)
-            #trace = get_trace(net, ind_loss, net_input_list, img_np_list, img_noisy_np_list)
-            #print(e1,jac,trace)
-            #print(e1,jac,trace)
-            #print(f"At step '{j}', e1 is '{e1}', psnr is '{psnr}'")
-
             print(f"At step '{j}', psnr is '{psnr}'")
             psnr_list.append(psnr)  
-            # out = (out - out.min()) / (out.max() - out.min())   
-            # plt.imsave(f'{outdir}/out_images/out_image_{ino}_{j}.png', out, cmap='gray')
-            #sharp.append(e1)
-            #jacl.append(jac)
-            #tr.append(trace)
-    # end_time = time.time()
-    # duration = end_time - start_time 
-    # print("duration is:",duration)                
-        #if j%10000==0:
-            #eig,weight = get_hessian_spectrum(net, ind_loss, net_input_list, img_np_list, img_noisy_np_list,iter= 100, n_v=1)
-    ##plot and save psnr list in train folder with figure name including ino 
+
     plt.plot(psnr_list)
     plt.savefig(f'{outdir}/psnr_{ino}.png')
     plt.close()
@@ -279,7 +201,10 @@ if __name__ == "__main__":
     parser.add_argument("--ino", type=int, default=0, help="image index ")
     args = parser.parse_args()
     
-    main(images=args.images, lr=args.lr, max_steps=args.max_steps, optim= args.optim,reg=args.reg,sigma = args.sigma, num_layers = args.num_layers, show_every = args.show_every, beta = args.beta, device_id = args.device_id,ino = args.ino, weight_decay = args.decay)
+    main(images=args.images, lr=args.lr, max_steps=args.max_steps, optim= args.optim,
+         reg=args.reg,sigma = args.sigma, num_layers = args.num_layers, 
+         show_every = args.show_every, beta = args.beta,
+           device_id = args.device_id,ino = args.ino, weight_decay = args.decay)
         
     
     
