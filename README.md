@@ -37,9 +37,8 @@ Activate the conda environment before working with the code: `conda activate lot
 
 ### Finding-1: Finding mask at initialization
 To find the mask at initialization, follow these steps:
-\```python
+```python
 python find_mask.py --config config_file.yaml
-\```
 
 
 ### Finding-2: Sparse network training
