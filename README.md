@@ -36,7 +36,6 @@ This repository contains the source code for pruning image generator networks at
 Activate the conda environment before working with the code: `conda activate lot`
 
 ### Finding-1: Finding mask at initialization
-#### Branch-1: Mask Initialization
 To find the mask at initialization, follow these steps:
 1. Navigate to the directory containing the initialization scripts:
    \```bash
@@ -47,8 +46,7 @@ To find the mask at initialization, follow these steps:
    python find_mask.py --config config_file.yaml
    \```
 
-   ### Finding-2: Sparse network training
-#### Branch-1: Sparse Training
+### Finding-2: Sparse network training
 To train the sparse network, follow these steps:
 1. Navigate to the training directory:
    \```bash
@@ -60,7 +58,7 @@ To train the sparse network, follow these steps:
    \```
 
 ### Finding-3: Sparse network transfer
-#### Branch-1: Transfer OES masks
+####  Transfer OES masks
 To transfer OES masks to another network:
 1. Navigate to the OES transfer directory:
    \```bash
@@ -71,7 +69,7 @@ To transfer OES masks to another network:
    python transfer_oes_masks.py --source_config source_config.yaml --target_config target_config.yaml
    \```
 
-#### Branch-2: Transfer IMP masks
+####  Transfer IMP masks
 To transfer IMP masks to another network:
 1. Navigate to the IMP transfer directory:
    \```bash
@@ -83,7 +81,7 @@ To transfer IMP masks to another network:
    \```
 
 ### Finding-4: Baseline pruning methods
-#### Branch-1: Pruning at initialization Methods
+#### Pruning at initialization Methods
 To perform pruning at initialization:
 1. Navigate to the pruning at initialization directory:
    \```bash
@@ -94,7 +92,7 @@ To perform pruning at initialization:
    python prune_at_initialization.py --config config_file.yaml
    \```
 
-#### Branch-2: IMP
+#### IMP
 To perform Iterative Magnitude Pruning (IMP):
 1. Navigate to the IMP directory:
    \```bash
