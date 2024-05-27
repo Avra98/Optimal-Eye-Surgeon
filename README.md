@@ -12,11 +12,11 @@ This repository contains the source code for pruning image generator networks at
   - [Finding-1: Finding mask at initialization](#finding-1-finding-mask-at-initialization)
   - [Finding-2: Sparse network training](#finding-2-sparse-network-training)
   - [Finding-3: Sparse network transfer](#finding-3-sparse-network-transfer)
-    - [Branch-1: Transfer OES masks](#branch-1-transfer-oes-masks)
-    - [Branch-2: Transfer IMP masks](#branch-2-transfer-imp-masks)
+    - [Transfer OES masks](#transfer-oes-masks)
+    - [Transfer IMP masks](#transfer-imp-masks)
   - [Finding-4: Baseline pruning methods](#finding-4-baseline-pruning-methods)
-    - [Branch-1: Pruning at initialization Methods](#branch-1-pruning-at-initialization-methods)
-    - [Branch-2: IMP](#branch-2-imp)
+    - [Pruning at initialization Methods](#pruning-at-initialization-methods)
+    - [IMP](#imp)
 
 
 - [Contributing](#contributing)
