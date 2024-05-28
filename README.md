@@ -1,6 +1,8 @@
 ## Optimal Eye Surgeon 
 
-![This repository contains the source code for pruning image generator networks at initialization to alleviate overfitting.  ](DIP_quant/paper_figures/flow.svg)
+![Flow Diagram](paper_figures/flow.svg)
+This repository contains the source code for pruning image generator networks at initialization to alleviate overfitting.
+
 
 ## Table of Contents
 - [One-time Setup](#one-time-setup)
