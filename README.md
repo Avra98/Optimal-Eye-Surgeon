@@ -1,6 +1,10 @@
 ## Optimal Eye Surgeon 
 
-![Flow Diagram](paper_figures/flow.svg)
+<div style="display: flex; justify-content: space-around;">
+    <img src="paper_figures/flow.svg" alt="Flow Diagram" style="width: 45%;"/>
+    <img src="paper_figures/transfer.svg" alt="Transfer Diagram" style="width: 45%;"/>
+</div>
+
 This repository contains the source code for pruning image generator networks at initialization to alleviate overfitting.
 
 
