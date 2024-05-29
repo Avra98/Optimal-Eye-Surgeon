@@ -42,7 +42,7 @@ conda env create -f environment.yml
 
 
 ## Working 
-Activate the environment before running the code: conda activate lot
+Working with the code to reproduce results for each finding in the paper:
 
 ### Finding-1: Finding mask at initialization
 
