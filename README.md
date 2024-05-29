@@ -44,7 +44,7 @@ Activate the conda environment before working with the code: `conda activate lot
 ### Finding-1: Finding mask at initialization
 
 
-![equation](paper_figures/equation.png)
+![equation](paper_figures/equation.png){width=300px}
 
 The following code implements the above optimization using Gumbel softmax reparameterization trick:
 
@@ -54,7 +54,7 @@ python dip_mask_clean.py --image_name="pepper" --sparsity=0.05
 
 to generate supermasks at various sparsity levels as follows
 
-![supermasks](paper_figures/only2masks.svg)
+![supermasks](paper_figures/only2masks.svg){width=300px}
 
 
 
