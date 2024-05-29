@@ -29,13 +29,10 @@ This repository contains the source code for pruning image generator networks at
 - [License](#license)
 
 
-## One-time Setup
+##  Setup
 1. Install conda (if not already installed).
-2. Create and activate the conda environment: conda env create -f environment.yml && conda activate lot
+2. Create and activate the conda environment: 'conda env create -f environment.yml' && 'conda activate lot'
 
-## Updating
-1. Update code: `git pull`
-2. Update environment: conda env update -f environment.yml
 
 ## Working 
 Activate the environment before running the code: conda activate lot
