@@ -32,13 +32,13 @@ This repository contains the source code for pruning image generator networks at
 ##  Setup
 1. Install conda (if not already installed).
 2. Create the environment: 
-'''bash
+```bash
 conda env create -f environment.yml
-'''
+```
 3. Activate environment:
- '''bash
+ ```bash
  conda activate lot
- '''
+ ```
 
 
 ## Working 
