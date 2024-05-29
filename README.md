@@ -43,10 +43,8 @@ Activate the conda environment before working with the code: `conda activate lot
 
 ### Finding-1: Finding mask at initialization
 
-\[ \mathbf{m}^*(\mathbf{y}) = \mathcal{C}(\mathbf{p}^*) \text{ such that} \]
-
-\[ \mathbf{p}^* = \arg \min_{\mathbf{p}} \left( \mathbb{E}_{\mathbf{m} \sim \text{Ber}(\mathbf{p})} \left[ \left\| G(\theta_{\text{in}} \circ \mathbf{m}, \mathbf{z}) - \mathbf{y} \right\|_2^2 \right] + \lambda KL(\text{Ber}(\mathbf{p}) \parallel \text{Ber}(\mathbf{p}_0)) \right). \]
-
+![equation](paper_figures/equation.png.png)
+![supermasks](paper_figures/only2masks.svg)
 
 Running the code solves the above optimization::
 ```python
