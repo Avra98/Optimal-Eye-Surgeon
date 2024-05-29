@@ -65,8 +65,8 @@ python train_sparse_clean.py --image_name="pepper"
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
 
-![Sparse Network Transfer 1](DIP_quant/paper_figures/another.gif)
-![Sparse Network Transfer 2](DIP_quant/paper_figures/Lena_ppt3.gif)
+![Sparse Network Transfer 1](paper_figures/another.gif)
+![Sparse Network Transfer 2](paper_figures/Lena_ppt3.gif)
 
 
 
