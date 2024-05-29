@@ -30,19 +30,17 @@ This repository contains the source code for pruning image generator networks at
 
 
 ## One-time Setup
-1. Install a working version of conda.
-2. Create a conda environment: `conda env create --file environment.yml`
-3. Activate the conda environment: `conda activate lot`
+1. Install conda (if not already installed).
+2. Create and activate the conda environment: conda env create -f environment.yml && conda activate lot
 
 ## Updating
-1. Pull the latest changes: `git pull`
-2. Update the conda environment: `conda env update -f environment.yml`
+1. Update code: `git pull`
+2. Update environment: conda env update -f environment.yml
 
-## Working with the Code
-Activate the conda environment before working with the code: `conda activate lot`
+## Working 
+Activate the environment before running the code: conda activate lot
 
 ### Finding-1: Finding mask at initialization
-
 
 <img src="paper_figures/equation.png" width="400px">
 
