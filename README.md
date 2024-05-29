@@ -65,15 +65,8 @@ python train_sparse_clean.py --image_name="pepper"
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
 
-<video width="320" height="240" controls>
-  <source src="DIP_quant/paper_figures/another.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-<video width="320" height="240" controls>
-  <source src="DIP_quant/paper_figures/Lena_ppt3.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![Sparse Network Transfer 1](DIP_quant/paper_figures/another.gif)
+![Sparse Network Transfer 2](DIP_quant/paper_figures/Lena_ppt3.gif)
 
 
 
