@@ -91,11 +91,11 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     print(f"Starting sparse network training with mask with sparsity level '{sparsity}' on image '{image_name}' with sigma={sigma}.")
     print(f"All results will be saved in: {outdir}/out_sparsenet/{sigma}")
 
-    with open(f'{outdir}/masked_model_{ino}.pkl', 'rb') as f:
+    with open(f'{outdir}/masked_model_{image_name}.pkl', 'rb') as f:
         masked_model = cPickle.load(f)
-    with open(f'{outdir}/net_input_list_{ino}.pkl', 'rb') as f:
+    with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
-    with open(f'{outdir}/mask_{ino}.pkl', 'rb') as f:
+    with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
 
     masked_model = mask_network(mask, masked_model)
@@ -112,9 +112,9 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         np.savez(f'{outdir}/out_sparsenet/{sigma}/psnr_{ino}.npz', psnr=psnr)
 
         output_paths = [
-            f"{outdir}/out_sparsenet/{sigma}/out_{ino}.png",
-            f"{outdir}/out_sparsenet/{sigma}/img_np_{ino}.png",
-            f"{outdir}/out_sparsenet/{sigma}/img_noisy_np_{ino}.png"
+            f"{outdir}/out_sparsenet/{sigma}/out_{image_name}.png",
+            f"{outdir}/out_sparsenet/{sigma}/img_np_{image_name}.png",
+            f"{outdir}/out_sparsenet/{sigma}/img_noisy_np_{image_name}.png"
         ]
 
         images_to_save = [out_np[0, :, :, :].transpose(1, 2, 0), img_np[0, :, :, :].transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]

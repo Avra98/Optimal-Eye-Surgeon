@@ -1,4 +1,4 @@
-## Optimal Eye Surgeon 
+## Optimal Eye Surgeon (ICML-2024)
 
 <div style="display: flex; justify-content: space-around;">
     <img src="paper_figures/flow.svg" alt="Flow Diagram" style="width: 45%;"/>
