@@ -43,13 +43,21 @@ Activate the conda environment before working with the code: `conda activate lot
 
 ### Finding-1: Finding mask at initialization
 
-![equation](paper_figures/equation.png.png)
+
+![equation](paper_figures/equation.png)
+
+The following code implements the above optimization using Gumbel softmax reparameterization trick:
+
+```python
+python dip_mask_clean.py --image_name="pepper" --sparsity=0.05
+```
+
+to generate supermasks at various sparsity levels as follows
+
 ![supermasks](paper_figures/only2masks.svg)
 
-Running the code solves the above optimization::
-```python
-python dip_mask_clean.py --image_name="pepper"
-```
+
+
 
 ### Finding-2: Sparse network training
 
