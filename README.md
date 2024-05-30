@@ -63,11 +63,37 @@ to generate supermasks at various sparsity levels as follows
 
 ### Finding-2: Sparse network training
 
-Implements sparse network training on the image.
+Implements sparse network training on the image to alleviate overfitting:
 
+
+<img src="paper_figures/psnr_comb0.svg" width="500px">
+
+To run sparse network training on the image, use the following command:
 ```python
 python train_sparse_clean.py --image_name="pepper"
 ```
+
+For comparing with baselines, use the following command:
+
+For running deep decoder:
+
+```python
+python vanilla_decoder_clean.py --image_name="pepper"
+```
+
+Running vanilla deep image prior:
+
+```python
+python vanilla_dip_clean.py --image_name="pepper"
+```
+
+Running SGLD:
+
+```python   
+python sgld_clean.py --image_name="pepper"
+```
+
+
 
 
 ### Finding-3: Sparse network transfer
