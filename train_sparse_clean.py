@@ -6,7 +6,8 @@ import warnings
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from DIP_quant.utils.quant import *
+from utils.quant import *
+from utils.imp import *
 from models.cnn import cnn
 from PIL import Image
 import torch
@@ -134,7 +135,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     print("Experiment done")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Image denoising using DIP")
+    parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")
 
     image_choices = [
         'baboon', 'barbara', 'lenna', 'pepper'

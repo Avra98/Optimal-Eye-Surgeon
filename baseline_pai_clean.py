@@ -10,8 +10,8 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from DIP_quant.utils.quant import *
-from imp import *
+from utils.quant import *
+from utils.imp import *
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -52,7 +52,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
     print(f"Noisy PSNR is '{noisy_psnr}'")
     print(f"Starting pruning at initialization ({prune_type}) training with sparsity {sparse} on image {image_name}")
@@ -103,7 +103,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
 
     psnr, out = train_sparse(net, net_input, mask, img_np, img_noisy_np, max_step=max_steps, show_every=show_every, device=device_id)
 
-    outdir = f'data/denoising/Set14/mask/{image_name}/pai/{prune_type}_{sparse}'
+    outdir = f'images/{image_name}/pai/{prune_type}_{sparse}'
     print(f"Output directory: {outdir}")
     os.makedirs(f'{outdir}', exist_ok=True)
 
@@ -143,8 +143,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'bridge', 'coastguard', 'comic', 'face', 'flowers',
-        'foreman', 'lenna', 'man', 'monarch', 'pepper', 'ppt3', 'zebra'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")

@@ -67,7 +67,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
 
     print(f"Starting SGLD with image {image_name} ")
@@ -125,7 +125,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         psnr_gt = compare_psnr(img_np, out_np)
         return psnr_gt, out_np
 
-    outdir = f'data/denoising/Set14/{image_name}/sgld'
+    outdir = f'images/{image_name}/sgld'
     os.makedirs(f'{outdir}', exist_ok=True)
     
     for j in range(max_steps):
@@ -171,8 +171,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'bridge', 'coastguard', 'comic', 'face', 'flowers',
-        'foreman', 'lenna', 'man', 'monarch', 'pepper', 'ppt3', 'zebra'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', required=False, help="which image to denoise")

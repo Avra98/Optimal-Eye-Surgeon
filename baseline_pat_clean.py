@@ -10,8 +10,8 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from DIP_quant.utils.quant import *
-from imp import *
+from utils.quant import *
+from utils.imp import *
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument("--device_id", type=int, default=0, help="specify which gpu")
     parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
     parser.add_argument("--decay", type=float, default=0, help="weight decay")
-    parser.add_argument("--image_name", type=str, choices=image_choices, default="baboon", help="name of image to denoise")
+    parser.add_argument("--image_name", type=str, choices=image_choices, default="pepper", help="name of image to denoise")
     parser.add_argument("--prune_iters", type=int, default=14, help="number of pruning iterations")
     parser.add_argument("--percent", type=float, default=0.2, help="percentage of pruning")
     parser.add_argument("--num_epoch", type=int, default=40000, help="number of iterations for each pruning iteration")

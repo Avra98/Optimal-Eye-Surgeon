@@ -10,7 +10,8 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from DIP_quant.utils.quant import *
+from utils.quant import *
+from utils.imp import *
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -83,17 +84,17 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     if trans_type == "pai":
         outdir = f'sparse_models/{transferimage_name}'
         print(f"Output directory: {outdir}")
-        os.makedirs(f'{outdir}/trans_{image_name}_sparsenet_set14/{sigma}', exist_ok=True)
-        with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
+        os.makedirs(f'{outdir}/trans_{transferimage_name}_sparsenet_set14/{sigma}', exist_ok=True)
+        with open(f'{outdir}/net_input_list_{transferimage_name}.pkl', 'rb') as f:
             net_input_list = cPickle.load(f)
-        with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
+        with open(f'{outdir}/mask_{transferimage_name}.pkl', 'rb') as f:
             mask = cPickle.load(f)
 
 
     elif trans_type == "pat":
-        outdir = f'data/denoising/Set14/mask/{transferimage_name}/pat/14_0.2'
+        outdir = f'sparse_models_imp/{transferimage_name}'
         print(f"Output directory: {outdir}")
-        os.makedirs(f'{outdir}/trans_{image_name}_sparsenet_set14/{sigma}', exist_ok=True)
+        os.makedirs(f'{outdir}/trans_{transferimage_name}_sparsenet_set14/{sigma}', exist_ok=True)
         model_path = f'{outdir}/model_final.pth'
         net_input_list = torch.load(f'{outdir}/net_input_final.pth')
         mask = torch.load(f'{outdir}/mask_final.pth')
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'lenna', 'pepper'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--images", type=str, default=["Lena512rgb"], help="which image to denoise")
