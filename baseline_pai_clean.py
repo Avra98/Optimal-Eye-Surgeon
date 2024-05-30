@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from quant import *
+from DIP_quant.utils.quant import *
 from imp import *
 from models.cnn import cnn
 import torch

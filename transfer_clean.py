@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from quant import *
+from DIP_quant.utils.quant import *
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -50,7 +50,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
     print(f"Noisy PSNR is '{noisy_psnr}'")
 
@@ -81,7 +81,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
         act_fun='LeakyReLU').type(dtype)
 
     if trans_type == "pai":
-        outdir = f'data/denoising/Set14/mask/{transferimage_name}/sparsity/det/{sparsity}/{kl}'
+        outdir = f'sparse_models/{transferimage_name}'
         print(f"Output directory: {outdir}")
         os.makedirs(f'{outdir}/trans_{image_name}_sparsenet_set14/{sigma}', exist_ok=True)
         with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
@@ -136,8 +136,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'bridge', 'coastguard', 'comic', 'face', 'flowers',
-        'foreman', 'lenna', 'man', 'monarch', 'pepper', 'ppt3', 'zebra'
+        'baboon', 'barbara', 'lenna', 'pepper'
     ]
 
     parser.add_argument("--images", type=str, default=["Lena512rgb"], help="which image to denoise")

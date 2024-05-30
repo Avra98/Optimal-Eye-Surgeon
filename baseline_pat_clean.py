@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
-from quant import *
+from DIP_quant.utils.quant import *
 from imp import *
 from models.cnn import cnn
 import torch
@@ -55,7 +55,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         noisy_psnr = compare_psnr(img_np, img_noisy_np)
         return img_np, img_noisy_np, noisy_psnr
 
-    img_np, img_noisy_np, noisy_psnr = load_image('data/denoising/Set14', image_name, sigma)
+    img_np, img_noisy_np, noisy_psnr = load_image('images', image_name, sigma)
     print(f"Starting IMP on DIP with {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta}) on image {image_name}")
     print(f"Noisy PSNR: {noisy_psnr}")
 
@@ -90,7 +90,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     elif optim == "SAM":
         optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
 
-    outdir = f'data/denoising/Set14/mask/{image_name}/pat/early/{prune_iters}_{percent}'
+    outdir = f'sparse_models_imp/{image_name}'
     print(f"Output directory: {outdir}")
     os.makedirs(f'{outdir}', exist_ok=True)
 
@@ -124,8 +124,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'bridge', 'coastguard', 'comic', 'face', 'flowers',
-        'foreman', 'lenna', 'man', 'monarch', 'pepper', 'ppt3', 'zebra'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")

@@ -10,8 +10,9 @@ warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from utils.sharpness import *
+from utils.quant import *
+from utils.imp import *
 from models import *
-from quant import *
 from ptflops import get_model_complexity_info
 from models.cnn import cnn
 import torch
@@ -50,7 +51,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
     print("noisy psnr:", noisy_psnr)
     print(f'Starting vanilla DIP on {image_name} using {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
@@ -100,9 +101,8 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         img_np = img_var.detach().cpu().numpy()
         psnr_gt = compare_psnr(img_np, out_np)
         return psnr_gt, out_np
-
-    fileid = f'{optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta}, reg={reg})'
-    outdir = f'data/denoising/Set14/mask/{image_name}/vanilla/{sigma}'
+    
+    outdir = f'images/{image_name}/vanilla/{sigma}'
     os.makedirs(f'{outdir}', exist_ok=True)
 
     psnr_list = []
@@ -124,8 +124,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'pepper', 'foreman', 'flowers', 'comic', 'lena', 'barbara', 'monarch', 
-        'baboon', 'ppt3', 'coastguard', 'bridge', 'zebra', 'face', 'man'
+        'pepper', 'lena', 'barbara', 'baboon'
     ]
 
     parser.add_argument("--lr", type=float, default=1e-3, help="the learning rate")

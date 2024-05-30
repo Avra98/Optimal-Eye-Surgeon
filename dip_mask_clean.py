@@ -4,8 +4,10 @@ import os
 import warnings
 import numpy as np
 from utils.denoising_utils import *
+from utils.quant import *
+from utils.imp import *
 from models import *
-from quant import *
+#from DIP_quant.utils.quant import *
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -56,7 +58,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     torch.cuda.current_device()
     prior_sigma = inverse_sigmoid(sparsity)
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
 
     input_depth = 32
@@ -83,7 +85,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         act_fun='LeakyReLU'
     ).type(dtype)
 
-    outdir = f'data/denoising/Set14/mask/{image_name}/sparsity/{mask_opt}/{sparsity}/{kl}'
+    outdir = f'sparse_models/{image_name}'
     os.makedirs(f'{outdir}/out_images/', exist_ok=True)
 
     print(f"Now mask with sparsity level '{sparsity}' is starting to get learned on image '{image_name}' with sigma={sigma}.")
@@ -147,8 +149,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'bridge', 'coastguard', 'comic', 'face', 'flowers',
-        'foreman', 'lenna', 'man', 'monarch', 'pepper', 'ppt3', 'zebra'
+        'baboon', 'barbara', 'lenna', 'pepper'
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', required=False, help="which image to denoise")
