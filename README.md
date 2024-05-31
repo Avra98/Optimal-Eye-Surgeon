@@ -15,6 +15,7 @@ This repository contains the source code for pruning image generator networks at
 - [Updating](#updating)
 
 - [Working with the Code](#working-with-the-code)
+  - [Quick Demo](#quick-demo) 
   - [Finding-1: Finding mask at initialization](#finding-1-finding-mask-at-initialization)
   - [Finding-2: Sparse network training](#finding-2-sparse-network-training)
   - [Finding-3: Sparse network transfer](#finding-3-sparse-network-transfer)
@@ -43,7 +44,7 @@ conda env create -f environment.yml
 
 ## Working 
 
-For a quick demo, please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods.
+### Quick demo: Please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods.
 
 Working with the code to reproduce results for each finding in the paper:
 
