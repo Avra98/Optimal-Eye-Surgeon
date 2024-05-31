@@ -93,24 +93,24 @@ Running SGLD:
 python sgld_clean.py --image_name="pepper"
 ```
 
-
-
-
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
 
 ![Sparse Network Transfer 1](paper_figures/another.gif)
 ![Sparse Network Transfer 2](paper_figures/Lena_ppt3.gif)
 
-
+```python 
+python transfer_clean.py --trans_type="pat" --transferimage_name="lena" --image_name="baboon"
+```
 
 ### Finding-4: Baseline pruning methods
 #### Pruning at initialization Methods
+
 ```python
-python find_mask.py --config config_file.yaml
+python baseline_pai_clean.py --image_name="pepper"
 ```
 
 #### IMP
 ```python
-python find_mask.py --config config_file.yaml
-```
+python baseline_pat_clean.py --image_name="pepper"
+``
