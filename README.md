@@ -43,7 +43,7 @@ conda env create -f environment.yml
 
 ## Working 
 
-For a quick demo, please run OES_demo_comparison.ipynb to see how OES prevents overfitting in comparison to other methods.
+For a quick demo, please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods.
 
 Working with the code to reproduce results for each finding in the paper:
 
