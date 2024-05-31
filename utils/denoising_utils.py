@@ -212,3 +212,32 @@ def gaussian(x, x0, sigma_squared):
     return np.exp(-(x0 - x)**2 /
                   (2.0 * sigma_squared)) / np.sqrt(2 * np.pi * sigma_squared)
 
+def resize_and_crop(img_pil, base_size):
+    """ Resize and crop the image to make it square with the specified base size. """
+    width, height = img_pil.size
+
+    # Find the nearest base size
+    if abs(base_size - 256) < abs(base_size - 480):
+        nearest_base = 256 if abs(base_size - 256) < abs(base_size - 512) else 512
+    else:
+        nearest_base = 480 if abs(base_size - 480) < abs(base_size - 512) else 512
+
+    # Resize the image to maintain aspect ratio
+    ratio = min(nearest_base / width, nearest_base / height)
+    new_width = round(width * ratio)
+    new_height = round(height * ratio)
+
+    # Adjust dimensions if they are off due to rounding
+    if new_width not in [256, 480, 512]:
+        new_width = nearest_base
+    if new_height not in [256, 480, 512]:
+        new_height = nearest_base
+
+    img_pil = img_pil.resize((new_width, new_height), Image.ANTIALIAS)
+
+    # Crop to make it square
+    crop_width = (new_width - nearest_base) // 2
+    crop_height = (new_height - nearest_base) // 2
+    img_pil = img_pil.crop((crop_width, crop_height, new_width - crop_width, new_height - crop_height))
+
+    return img_pil

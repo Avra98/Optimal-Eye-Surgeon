@@ -469,13 +469,10 @@ def train_dense(net, net_input,  img_var, noise_var,learning_rate=1e-3, max_step
     # Define the optimizer
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
-    # Define the learning rate scheduler
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=lr_step, gamma=lr_gamma)
-
     # Forward pass to compute initial PSNR
     with torch.no_grad():
         initial_out = net(net_input)
-        initial_psnr = compare_psnr(img_var.detach().cpu().numpy(), initial_out.detach().cpu().numpy()[0])
+        initial_psnr = compare_psnr(img_var.detach().cpu().numpy(), initial_out.detach().cpu().numpy())
         print("Initial PSNR of output image is: ", initial_psnr)
     
     for epoch in range(max_step):
@@ -485,11 +482,10 @@ def train_dense(net, net_input,  img_var, noise_var,learning_rate=1e-3, max_step
         total_loss.backward()
 
         optimizer.step()
-        scheduler.step()
 
         if epoch % show_every == 0:
             # Calculating PSNR
-            out_np = out.detach().cpu().numpy()[0]
+            out_np = out.detach().cpu().numpy()
             img_np = img_var.detach().cpu().numpy()
             psnr_gt = compare_psnr(img_np, out_np)
             psnr_lists.append(psnr_gt)
@@ -502,22 +498,23 @@ def train_dense(net, net_input,  img_var, noise_var,learning_rate=1e-3, max_step
 
 def train_deep_decoder(k,img_var, noise_var,learning_rate=0.01, max_step=40000, show_every=1000,device='cuda:1'):
     output_depth = img_var.shape[0]
-    print(img_var.shape)
     img_var = np_to_torch(img_var).type(dtype).to(device)
     noise_var = np_to_torch(noise_var).type(dtype).to(device)
     mse = torch.nn.MSELoss().type(dtype)
     num_channels = [128]*k
     totalupsample = 2**len(num_channels)
-    print(totalupsample,img_var.shape)
+    #print(totalupsample,img_var.shape)
     width = int(img_var.shape[2]/totalupsample)
     height = int(img_var.shape[2]/totalupsample)
-    print(width,height)
     shape = [1,num_channels[0], width, height]  
     net_input = Variable(torch.zeros(shape))
     net_input.data.uniform_()
     net_input.data *= 1./10
     net_input = net_input.type(dtype)
-    net = decodernw(output_depth, num_channels_up=num_channels , upsample_first=True).type(dtype)    
+    net = decodernw(output_depth, num_channels_up=num_channels , upsample_first=True).type(dtype)
+    ## print total number of paramter in net
+    s  = sum([np.prod(list(p.size())) for p in net.parameters()]);
+    print ('Number of params in decoder is: %d' % s)    
     # Define the optimizer
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
     psnr_lists = []
@@ -529,7 +526,7 @@ def train_deep_decoder(k,img_var, noise_var,learning_rate=0.01, max_step=40000, 
         optimizer.step()
         if epoch % show_every == 0:
             # Calculating PSNR
-            out_np = out.detach().cpu().numpy()[0]
+            out_np = out.detach().cpu().numpy()
             img_np = img_var.detach().cpu().numpy()
             psnr_gt = compare_psnr(img_np, out_np)
             psnr_lists.append(psnr_gt)
@@ -893,3 +890,29 @@ def convolve_with_gaussian_torch(image_tensor, sigma):
     blurred_image = F.conv2d(image_tensor, kernel, padding=padding, groups=channels)
     
     return blurred_image
+
+
+def inverse_sigmoid(x):
+    return torch.log(torch.tensor(x) / torch.tensor(1 - x))
+
+def normalize_image(img):
+    min_val = np.min(img)
+    max_val = np.max(img)
+    return (img - min_val) / (max_val - min_val)
+
+def load_image(train_folder, image_name, sigma):
+    train_noisy_folder = f'{train_folder}/train_noisy_{sigma}'
+    os.makedirs(train_noisy_folder, exist_ok=True)
+
+    file_path = os.path.join(train_folder, f'{image_name}.png')
+    filename = os.path.splitext(os.path.basename(file_path))[0]
+    img_pil = Image.open(file_path)
+    img_pil = resize_and_crop(img_pil, max(img_pil.size))
+    img_np = pil_to_np(img_pil)
+    img_noisy_np = np.clip(img_np + np.random.normal(scale=sigma, size=img_np.shape), 0, 1).astype(np.float32)
+
+    img_noisy_pil = np_to_pil(img_noisy_np)
+    img_noisy_pil.save(os.path.join(train_noisy_folder, filename + '.png'))
+
+    noisy_psnr = compare_psnr(img_np, img_noisy_np)
+    return img_np, img_noisy_np, noisy_psnr        
