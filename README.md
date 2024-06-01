@@ -57,7 +57,7 @@ Working with the code to reproduce results for each finding in the paper:
 The following code implements the above optimization using Gumbel softmax reparameterization trick:
 
 ```python
-python dip_mask_clean.py --image_name="pepper" --sparsity=0.05
+python dip_mask.py --image_name="pepper" --sparsity=0.05
 ```
 
 to generate supermasks at various sparsity levels as follows
@@ -76,7 +76,7 @@ Implements sparse network training on the image to alleviate overfitting:
 
 To run sparse network training on the image, use the following command:
 ```python
-python train_sparse_clean.py --image_name="pepper"
+python train_sparse.py --image_name="pepper"
 ```
 
 For comparing with baselines, use the following command:
@@ -84,19 +84,19 @@ For comparing with baselines, use the following command:
 For running deep decoder:
 
 ```python
-python vanilla_decoder_clean.py --image_name="pepper"
+python vanilla_decoder.py --image_name="pepper"
 ```
 
 Running vanilla deep image prior:
 
 ```python
-python vanilla_dip_clean.py --image_name="pepper"
+python vanilla_dip.py --image_name="pepper"
 ```
 
 Running SGLD:
 
 ```python   
-python sgld_clean.py --image_name="pepper"
+python sgld.py --image_name="pepper"
 ```
 
 ### Finding-3: Sparse network transfer
@@ -106,17 +106,17 @@ python sgld_clean.py --image_name="pepper"
 ![Sparse Network Transfer 2](paper_figures/Lena_ppt3.gif)
 
 ```python 
-python transfer_clean.py --trans_type="pat" --transferimage_name="lena" --image_name="baboon"
+python transfer.py --trans_type="pat" --transferimage_name="lena" --image_name="baboon"
 ```
 
 ### Finding-4: Baseline pruning methods
 #### Pruning at initialization Methods
 
 ```python
-python baseline_pai_clean.py --image_name="pepper"
+python baseline_pai.py --image_name="pepper"
 ```
 
 #### IMP
 ```python
-python baseline_pat_clean.py --image_name="pepper"
+python baseline_pat.py --image_name="pepper"
 ``
