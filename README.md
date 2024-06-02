@@ -106,8 +106,14 @@ python sgld.py --image_name="pepper"
 ![Sparse Network Transfer 1](paper_figures/another.gif)
 ![Sparse Network Transfer 2](paper_figures/Lena_ppt3.gif)
 
+For OES mask transfer, use the following command:
 ```python 
-python transfer.py --trans_type="pat" --transferimage_name="lena" --image_name="baboon"
+python transfer.py --trans_type="pai" --transferimage_name="pepper" --image_name="lena"
+```
+
+For IMP mask transfer, use the following command:
+```python 
+python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name="lena"
 ```
 
 ### Finding-4: Baseline pruning methods
