@@ -122,6 +122,10 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 ### Finding-4: Baseline pruning methods
 #### Pruning at initialization Methods
 
+
+<img src="paper_figures/Set14-0.svg" width="500px">
+
+
 ```python
 python baseline_pai.py --image_name="pepper"
 ```
