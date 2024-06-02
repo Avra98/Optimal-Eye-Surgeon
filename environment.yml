@@ -17,12 +17,6 @@ dependencies:
   - cffi
   - charset-normalizer
   - cryptography
-  - cuda-cudart
-  - cuda-cupti
-  - cuda-libraries
-  - cuda-nvrtc
-  - cuda-nvtx
-  - cuda-runtime
   - cycler
   - dbus
   - decorator
@@ -43,24 +37,14 @@ dependencies:
   - lame
   - ld_impl_linux-64
   - lerc
-  - libcublas
-  - libcufft
-  - libcurand
-  - libcusolver
-  - libcusparse
   - libdeflate
   - libffi
-  - libgcc-ng
   - libgfortran-ng
   - libgfortran4
-  - libgomp
   - libiconv
   - libidn2
-  - libnpp
-  - libnvjpeg
   - libpng
   - libprotobuf
-  - libstdcxx-ng
   - libtasn1
   - libtiff
   - libunistring
@@ -124,6 +108,22 @@ dependencies:
   - zlib
   - zstd
   - pip:
+      - cuda-nvrtc
+      - libnvjpeg
+      - libnpp
+      - libgomp
+      - libgcc-ng
+      - libcurand
+      - libcusparse
+      - cuda-cupti
+      - libcusolver
+      - libcufft
+      - libcublas
+      - cuda-cudart
+      - cuda-libraries
+      - cuda-nvtx
+      - libstdcxx-ng
+      - _openmp_mutex
       - anyio==3.7.1
       - argon2-cffi==23.1.0
       - argon2-cffi-bindings==21.2.0
