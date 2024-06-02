@@ -47,6 +47,7 @@ conda env create -f environment.yml
 ### Quick demo: 
 
 Please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods.
+Run [impvsoes_comparison.ipynb](impvsoes_comparison.ipynb) to compare OES masks at initialization and IMP masks at convergence. 
 
 Working with the code to reproduce results for each finding in the paper:
 
