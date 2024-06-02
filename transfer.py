@@ -147,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int, default=200, help="show_every")
+    parser.add_argument("--show_every", type=int, default=1000, help="show_every")
     parser.add_argument("--device_id", type=int, default=0, help="specify which gpu")
     parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
     parser.add_argument("--decay", type=float, default=0, help="weight decay")
