@@ -46,8 +46,8 @@ conda env create -f environment.yml
 
 ### Quick demo: 
 
-Please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods.
-Run [impvsoes_comparison.ipynb](impvsoes_comparison.ipynb) to compare OES masks at initialization and IMP masks at convergence. 
+Please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods. (Approximate runtime ~ 10 mins)
+Run [impvsoes_comparison.ipynb](impvsoes_comparison.ipynb) to compare OES masks at initialization and IMP masks at convergence. (Approximate runtime ~ 7 mins)
 
 Working with the code to reproduce results for each finding in the paper:
 
@@ -127,10 +127,23 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 
 
 ```python
-python baseline_pai.py --image_name="pepper"
+python baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
+Chose among the following options: 
+
+- `rand_global`
+- `rand_local`
+- `mag_global`
+- `snip`
+- `snip_local`
+- `grasp`
+- `grasp_local`
+- `synflow`
+- `synflow_local`
 
 #### IMP
 ```python
-python baseline_pat.py --image_name="pepper"
-``
+python baseline_pat.py --image_name="pepper" --prune_iters=14 --percent=0.2
+```
+The above line runs IMP for 14 iterations with 20% deletion of weights at each iteration. Resulting in 5% sparsity. (drastic pruning degrades performance)
+
