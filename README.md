@@ -103,8 +103,10 @@ python sgld.py --image_name="pepper"
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
 
-<img src="paper_figures/another.gif" alt="Sparse Network Transfer 1" width="300">
-<img src="paper_figures/Lena_ppt3.gif" alt="Sparse Network Transfer 2" width="300">
+<div style="display: flex; justify-content: space-between;">
+  <img src="paper_figures/another.gif" alt="Sparse Network Transfer 1" width="300">
+  <img src="paper_figures/Lena_ppt3.gif" alt="Sparse Network Transfer 2" width="300">
+</div>
 
 
 For OES mask transfer, use the following command:
