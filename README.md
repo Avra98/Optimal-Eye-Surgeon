@@ -129,7 +129,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 ```python
 python baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
-Chose among the following options: 
+Chose among the following options for prune_type: 
 
 - `rand_global`
 - `rand_local`
