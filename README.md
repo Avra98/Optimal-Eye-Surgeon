@@ -123,7 +123,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 #### Pruning at initialization Methods
 
 
-<img src="paper_figures/Set14-0.svg" width="500px">
+<img src="paper_figures/Set14-0.svg" alt="Set14-0" width="500px">
 
 
 ```python
