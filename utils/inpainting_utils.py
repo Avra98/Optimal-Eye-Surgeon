@@ -66,7 +66,9 @@ def resize_and_crop(img_pil, base_size):
     if new_height not in [256, 480, 512]:
         new_height = nearest_base
 
-    img_pil = img_pil.resize((new_width, new_height), Image.ANTIALIAS)
+    #img_pil = img_pil.resize((new_width, new_height), Image.ANTIALIAS)
+    img_pil = img_pil.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
 
     # Crop to make it square
     crop_width = (new_width - nearest_base) // 2

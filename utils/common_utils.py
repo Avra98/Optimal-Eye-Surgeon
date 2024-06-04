@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torchvision
+#import torchvision
 import sys
 
 import numpy as np
@@ -75,12 +75,12 @@ def get_params(opt_over, net, net_input, downsampler=None):
             
     return params
 
-def get_image_grid(images_np, nrow=8):
-    '''Creates a grid from a list of images by concatenating them.'''
-    images_torch = [torch.from_numpy(x) for x in images_np]
-    torch_grid = torchvision.utils.make_grid(images_torch, nrow)
+# def get_image_grid(images_np, nrow=8):
+#     '''Creates a grid from a list of images by concatenating them.'''
+#     images_torch = [torch.from_numpy(x) for x in images_np]
+#     torch_grid = torchvision.utils.make_grid(images_torch, nrow)
     
-    return torch_grid.numpy()
+#     return torch_grid.numpy()
 
 def plot_image_grid(images_np, nrow =8, factor=1, interpolation='lanczos'):
     """Draws images in a grid

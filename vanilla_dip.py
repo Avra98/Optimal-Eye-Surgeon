@@ -13,7 +13,6 @@ from utils.sharpness import *
 from utils.quant import *
 from utils.imp import *
 from models import *
-from ptflops import get_model_complexity_info
 from models.cnn import cnn
 import torch
 import torch.optim
@@ -25,7 +24,6 @@ torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from sam import SAM
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 
 import argparse
