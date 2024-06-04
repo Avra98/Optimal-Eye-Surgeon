@@ -34,11 +34,11 @@ This repository contains the source code for pruning image generator networks at
 1. Install conda (if not already installed).
 2. Create the environment: 
 ```bash
-conda env create -f environment.yml
+conda env create --name oes --file requirements.txt
 ```
 3. Activate environment:
  ```bash
- conda activate lot
+ conda activate oes
  ```
 
 
