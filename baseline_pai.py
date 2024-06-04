@@ -26,24 +26,6 @@ from sam import SAM
 
 import argparse
 
-def load_image(train_folder, image_name, sigma):
-    train_noisy_folder = f'{train_folder}/train_noisy_{sigma}'
-    os.makedirs(train_noisy_folder, exist_ok=True)
-    file_path = os.path.join(train_folder, f'{image_name}.png')
-    filename = os.path.splitext(os.path.basename(file_path))[0]
-    img_pil = Image.open(file_path)
-    img_pil = resize_and_crop(img_pil, max(img_pil.size))
-    img_np = pil_to_np(img_pil)
-    img_noisy_np = np.clip(img_np + np.random.normal(scale=sigma, size=img_np.shape), 0, 1).astype(np.float32)
-    img_noisy_pil = np_to_pil(img_noisy_np)
-    img_noisy_pil.save(os.path.join(train_noisy_folder, filename + '.png'))
-    noisy_psnr = compare_psnr(img_np, img_noisy_np)
-    return img_np, img_noisy_np, noisy_psnr
-
-def compare_psnr(img1, img2):
-    mse = np.mean(np.abs(img1 - img2) ** 2)
-    psnr = 10 * np.log10(np.max(np.abs(img1)) ** 2 / mse)
-    return psnr
 
 def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
