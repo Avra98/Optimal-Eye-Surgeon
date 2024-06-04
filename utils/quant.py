@@ -17,7 +17,6 @@ from scipy.ndimage import gaussian_filter
 from utils import *
 import pickle as cPickle
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from sam import SAM
 from utils.common_utils import *
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True

@@ -13,7 +13,6 @@ import torch
 import torch.optim
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from sam import SAM
 import argparse
 
 # Suppress warnings
