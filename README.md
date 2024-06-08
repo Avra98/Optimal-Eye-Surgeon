@@ -9,42 +9,51 @@ This repository contains the source code for pruning image generator networks at
 
 
 ## Table of Contents
-- [One-time Setup](#one-time-setup)
-  - [Installation](#installation)
-  - [Environment Setup](#environment-setup)
-- [Updating](#updating)
-
-- [Working with the Code](#working-with-the-code)
-  - [Quick Demo](#quick-demo) 
+- [Optimal Eye Surgeon (ICML-2024)](#optimal-eye-surgeon-icml-2024)
+- [Table of Contents](#table-of-contents)
+- [Setup](#setup)
+- [Working](#working)
+  - [Quick demo:](#quick-demo)
   - [Finding-1: Finding mask at initialization](#finding-1-finding-mask-at-initialization)
   - [Finding-2: Sparse network training](#finding-2-sparse-network-training)
   - [Finding-3: Sparse network transfer](#finding-3-sparse-network-transfer)
     - [Transfer OES masks](#transfer-oes-masks)
-    - [Transfer IMP masks](#transfer-imp-masks)
   - [Finding-4: Baseline pruning methods](#finding-4-baseline-pruning-methods)
     - [Pruning at initialization Methods](#pruning-at-initialization-methods)
     - [IMP](#imp)
 
 
-- [Contributing](#contributing)
-- [License](#license)
-
-
 ##  Setup
-1. Install conda (if not already installed).
-2. Create the environment: 
-```bash
-conda env create --name oes --file requirements.txt
+1. Install python and pip (if not already installed).
+2. Creating the environment and installing packages:
+
+Conda:
+```sh
+conda create --name oes python==3.7.16 # optionally specify python version
+``` 
+or with pyenv:
+```sh
+pyenv virtualenv 3.7.16 oes # optionally specify python verion
 ```
 3. Activate environment:
- ```bash
+
+Conda:
+ ```
  conda activate oes
  ```
+Pyenv:
+```
+pyenv virtualenv oes
+```
+4. Install packages:
+```
+pip install -r requirements.txt
+```
 
 
-## Working 
+## Working
 
-### Quick demo: 
+### Quick demo:
 
 Please run [OES_demo_comparison.ipynb](OES_demo_comparison.ipynb) to see how OES prevents overfitting in comparison to other methods. (Approximate runtime ~ 10 mins)
 
@@ -68,36 +77,33 @@ to generate supermasks at various sparsity levels as follows
 
 
 
-
 ### Finding-2: Sparse network training
 
-Implements sparse network training on the image to alleviate overfitting:
-
+After obtaining a mask by the above procedure, run the following to train the sparse network on the image. The sparse network alleviates overfitting:
 
 <img src="paper_figures/psnr_comb0.svg" width="500px">
 
-To run sparse network training on the image, use the following command:
 ```python
 python train_sparse.py --image_name="pepper"
 ```
 
 For comparing with baselines, use the following command:
 
-For running deep decoder:
+Deep decoder:
 
 ```python
 python vanilla_decoder.py --image_name="pepper"
 ```
 
-Running vanilla deep image prior:
+Vanilla deep image prior:
 
 ```python
 python vanilla_dip.py --image_name="pepper"
 ```
 
-Running SGLD:
+SGLD:
 
-```python   
+```python
 python sgld.py --image_name="pepper"
 ```
 
@@ -111,12 +117,12 @@ python sgld.py --image_name="pepper"
 
 
 For OES mask transfer, use the following command:
-```python 
+```python
 python transfer.py --trans_type="pai" --transferimage_name="pepper" --image_name="lena"
 ```
 
 For IMP mask transfer, use the following command:
-```python 
+```python
 python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name="lena"
 ```
 
@@ -130,7 +136,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 ```python
 python baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
-Chose among the following options for prune_type: 
+Chose among the following options for prune_type:
 
 - `rand_global`
 - `rand_local`
