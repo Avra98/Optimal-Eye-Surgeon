@@ -1,45 +1,46 @@
 from __future__ import print_function
+from sam import SAM
+import argparse
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
+import pickle as cPickle
+from utils.inpainting_utils import *
+from PIL import Image
+import time
+import torch.optim
+import torch
+from models.cnn import cnn
+from models import *
+from utils.imp import *
+from utils.quant import *
+from utils.sharpness import *
+from utils.denoising_utils import *
+import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import os
-import glob
-import sys
 from scipy.ndimage import gaussian_filter
 import warnings
 warnings.filterwarnings("ignore")
-import numpy as np
-from utils.denoising_utils import *
-from utils.sharpness import *
-from utils.quant import *
-from utils.imp import *
-from models import *
-from models.cnn import cnn
-import torch
-import torch.optim
-import time
-from PIL import Image
-from utils.inpainting_utils import *
-import pickle as cPickle
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+
+
 dtype = torch.cuda.FloatTensor
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-
-import argparse
 
 
-def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.1, num_layers: int = 6, 
-         show_every: int = 1000, device_id: int = 0, beta: float = 0.0, image_name: str = 'pepper', 
+def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.1, num_layers: int = 6,
+         show_every: int = 1000, device_id: int = 0, beta: float = 0.0, image_name: str = 'pepper',
          weight_decay: float = 0.0):
 
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
     train_folder = 'images'
-    img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
+    img_np, img_noisy_np, noisy_psnr = load_image(
+        train_folder, image_name, sigma)
     print("noisy psnr:", noisy_psnr)
-    print(f'Starting vanilla DIP on {image_name} using {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
+    print(f'Starting vanilla DIP on {image_name} using {
+          optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
     print(f"Noisy PSNR is '{noisy_psnr}'")
 
     input_depth = 32
@@ -67,12 +68,15 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     ).type(dtype)
 
     if optim == "SGD":
-        optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
+        optimizer = torch.optim.SGD(
+            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
     elif optim == "ADAM":
-        optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
+        optimizer = torch.optim.Adam(
+            net.parameters(), lr=lr, weight_decay=weight_decay)
     elif optim == "SAM":
         base_opt = torch.optim.SGD
-        optimizer = SAM(net.parameters(), base_opt, rho=reg, adaptive=False, lr=lr, weight_decay=weight_decay, momentum=beta)
+        optimizer = SAM(net.parameters(), base_opt, rho=reg, adaptive=False,
+                        lr=lr, weight_decay=weight_decay, momentum=beta)
 
     def closure_sgd(net_input, img_var, noise_var):
         optimizer.zero_grad()
@@ -86,7 +90,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         img_np = img_var.detach().cpu().numpy()
         psnr_gt = compare_psnr(img_np, out_np)
         return psnr_gt, out_np
-    
+
     outdir = f'images/{image_name}/vanilla/{sigma}'
     os.makedirs(f'{outdir}', exist_ok=True)
 
@@ -105,6 +109,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     torch.cuda.empty_cache()
     print("Experiment done")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
@@ -112,17 +117,26 @@ if __name__ == "__main__":
         'pepper', 'lena', 'barbara', 'baboon'
     ]
 
-    parser.add_argument("--lr", type=float, default=1e-3, help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="ADAM", help="which optimizer")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
+    parser.add_argument("--lr", type=float, default=1e-3,
+                        help="the learning rate")
+    parser.add_argument("--max_steps", type=int, default=40000,
+                        help="the maximum number of gradient steps to train for")
+    parser.add_argument("--optim", type=str, default="ADAM",
+                        help="which optimizer")
+    parser.add_argument("--reg", type=float, default=0.05,
+                        help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
-    parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int, default=100, help="show every n steps")
-    parser.add_argument("--device_id", type=int, default=1, help="specify which gpu")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
+    parser.add_argument("--num_layers", type=int,
+                        default=6, help="number of layers")
+    parser.add_argument("--show_every", type=int,
+                        default=100, help="show every n steps")
+    parser.add_argument("--beta", type=float, default=0,
+                        help="momentum for sgd")
+    parser.add_argument("--device_id", type=int, default=1,
+                        help="specify which gpu")
+    parser.add_argument("--image_name", type=str, choices=image_choices,
+                        default="pepper", help="name of image to denoise")
     parser.add_argument("--decay", type=float, default=0, help="weight decay")
-    parser.add_argument("--image_name", type=str, choices=image_choices, default="pepper", help="name of image to denoise")
 
     args = parser.parse_args()
 

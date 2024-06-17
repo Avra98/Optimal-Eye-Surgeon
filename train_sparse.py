@@ -1,15 +1,12 @@
 from __future__ import print_function
 import matplotlib.pyplot as plt
 import os
-import glob
 import warnings
 import numpy as np
 from utils.denoising_utils import *
 from models import *
 from utils.quant import *
 from utils.imp import *
-from models.cnn import cnn
-from PIL import Image
 import torch
 import torch.optim
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
@@ -26,11 +23,10 @@ torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 
 
-def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
-         num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
-         ino: int = 0, weight_decay: float = 0.0, mask_opt: str = "single", noise_steps: int = 80000, sparsity: float = 0.05):
+def main(image_name: str, max_steps: int, sigma: float = 0.2,
+         num_layers: int = 4, show_every: int = 1000, device_id: int = 0, 
+         ino: int = 0, sparsity: float = 0.05):
 
-    prior_sigma = inverse_sigmoid(sparsity)
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
@@ -39,10 +35,6 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
 
     input_depth = 32
     output_depth = 3
-    num_steps = noise_steps
-
-    mse = torch.nn.MSELoss().type(dtype)
-    net_input = get_noise(input_depth, "noise", img_np.shape[1:]).type(dtype)
 
     masked_model = skip(
         input_depth, output_depth,
@@ -118,19 +110,13 @@ if __name__ == "__main__":
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', help="which image to denoise")
-    parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="SAM", help="which optimizer")
-    parser.add_argument("--reg", type=float, default=0.03, help="regularization strength")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show every N steps")
     parser.add_argument("--device_id", type=int, default=0, help="specify which GPU")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for SGD")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
-    parser.add_argument("--mask_opt", type=str, default="det", help="mask type")
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, optim=args.optim, reg=args.reg, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,  weight_decay=args.decay, mask_opt=args.mask_opt)
+    main(image_name=args.image_name, max_steps=args.max_steps, sigma=args.sigma,
+         num_layers=args.num_layers, show_every=args.show_every, device_id=args.device_id)

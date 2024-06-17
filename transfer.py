@@ -2,8 +2,6 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
-import glob
-import sys
 from scipy.ndimage import gaussian_filter
 import warnings
 warnings.filterwarnings("ignore")
@@ -17,22 +15,19 @@ import torch
 import torch.optim
 from PIL import Image
 import time
-#from skimage.measure import compare_psnr
 from utils.inpainting_utils import * 
 import pickle as cPickle
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True
-dtype = torch.cuda.FloatTensor
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from sam import SAM
-
 import argparse
 
-def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.1,
-          num_layers: int = 4, show_every: int=1000, device_id: int = 0, beta: float = 0.0,
-          image_name: str = "baboon", trans_type: str="pai", weight_decay: float = 0.0, transferimage_name: str = "barbara",
-          mask_opt: str = "single", noise_steps: int = 80000, kl: float = 1e-5, prior_sigma: float = 0.0, sparsity: float = 0.05):
+dtype = torch.cuda.FloatTensor
+
+def main(sigma: float = 0.1, num_layers: int = 4, show_every: int=1000, device_id: int = 0, 
+          image_name: str = "baboon", trans_type: str="pai", transferimage_name: str = "barbara",
+          max_steps: int = 80000, sparsity: float = 0.05):
 
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
@@ -44,9 +39,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
     print(f"Performing mask transfer operation for {image_name} using {transferimage_name}'s mask with sparsity {sparsity}")
     input_depth = 32
     output_depth = 3
-    num_steps = noise_steps
-
-    mse = torch.nn.MSELoss().type(dtype)
 
     INPUT = "noise"
 
@@ -75,7 +67,6 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             net_input_list = cPickle.load(f)
         with open(f'{outdir}/mask_{transferimage_name}.pkl', 'rb') as f:
             mask = cPickle.load(f)
-
 
     elif trans_type == "pat":
         outdir = f'sparse_models_imp/{transferimage_name}'
@@ -117,7 +108,7 @@ def main(images: list, lr: float, max_steps: int, optim: str, reg: float = 0.0, 
             plt.close()
 
     torch.cuda.empty_cache()
-    print("Experiment done")
+    print("Transfer done")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
@@ -126,31 +117,19 @@ if __name__ == "__main__":
         'baboon', 'barbara', 'lena', 'pepper'
     ]
 
-    parser.add_argument("--images", type=str, default=["Lena512rgb"], help="which image to denoise")
-    parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="SAM", help="which optimizer")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show_every")
     parser.add_argument("--device_id", type=int, default=0, help="specify which gpu")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
     parser.add_argument("--image_name", type=str, choices=image_choices, default="baboon", help="image to denoise")
     parser.add_argument("--transferimage_name", type=str, choices=image_choices, default="barbara", help="transfer image from which to transfer")
     parser.add_argument("--trans_type", type=str, default="pai", help="transfer type")
-    parser.add_argument("--mask_opt", type=str, default="det", help="mask type")
-    parser.add_argument("--noise_steps", type=int, default=80000, help="number of steps for noise")
-    parser.add_argument("--kl", type=float, default=1e-5, help="regularization strength of kl")
-    parser.add_argument("--prior_sigma", type=float, default=0.0, help="prior mean")
     parser.add_argument("--sparsity", type=float, default=0.05, help="sparsity percent")
     args = parser.parse_args()
 
-    main(images=args.images, lr=args.lr, max_steps=args.max_steps, 
-         optim=args.optim, reg=args.reg, sigma=args.sigma, num_layers=args.num_layers, 
-         show_every=args.show_every, beta=args.beta, device_id=args.device_id, image_name=args.image_name, 
-         transferimage_name=args.transferimage_name, trans_type=args.trans_type, weight_decay=args.decay, 
-         mask_opt=args.mask_opt, noise_steps=args.noise_steps, kl=args.kl, prior_sigma=args.prior_sigma, sparsity=args.sparsity)
+    main(max_steps=args.max_steps, sigma=args.sigma, num_layers=args.num_layers, 
+         show_every=args.show_every, device_id=args.device_id, image_name=args.image_name, 
+         transferimage_name=args.transferimage_name, trans_type=args.trans_type, sparsity=args.sparsity)
 
 
