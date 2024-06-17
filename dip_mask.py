@@ -2,15 +2,13 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 import os
 import warnings
+import torch
+import torch.optim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from utils.denoising_utils import *
 from utils.quant import *
 from utils.imp import *
 from models import *
-from models.cnn import cnn
-import torch
-import torch.optim
-from PIL import Image
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import argparse
 
 # Suppress warnings
@@ -19,8 +17,6 @@ warnings.filterwarnings("ignore")
 # Enable CUDA
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
-
-
 
 dtype = torch.cuda.FloatTensor
 torch.set_default_tensor_type(dtype)

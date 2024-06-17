@@ -34,12 +34,11 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
 
-    train_folder = 'data/denoising/Set14'
+    train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(
         train_folder, image_name, sigma)
 
-    print(f"Starting reconstruction by deep decoder with {
-          k} layers on image '{image_name}")
+    print(f"Starting reconstruction by deep decoder with {k} layers on image '{image_name}")
     print(f"Noisy PSNR is '{noisy_psnr}'")
 
     output_depth = 3
@@ -85,8 +84,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         psnr_gt = compare_psnr(img_np, out_np)
         return psnr_gt, out_np
 
-    outdir = f'data/denoising/Dataset/mask/{
-        image_name}/deepdecoder_{k}/{sigma}'
+    outdir = f'data/denoising/Dataset/mask/{image_name}/deepdecoder_{k}/{sigma}'
     os.makedirs(f'{outdir}', exist_ok=True)
 
     for j in range(max_steps):
@@ -94,8 +92,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         psnr_noisy = compare_psnr(img_noisy_np, out[0, :, :, :])
 
         if j % show_every == 0 and j != 0:
-            print(f"At step '{j}', psnr is '{
-                  psnr}', noisy psnr is '{psnr_noisy}'")
+            print(f"At step '{j}', psnr is '{psnr}', noisy psnr is '{psnr_noisy}'")
             psnr_list.append(psnr)
 
     plt.plot(psnr_list)

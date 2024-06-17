@@ -153,8 +153,7 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
     plt.title(f'Distribution of p for sparsity level {sparsity}')
     plt.xlabel('Value of p')
     plt.ylabel('Frequency')
-    plt.savefig(f'histogram_centeredl1_{
-                ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
+    plt.savefig(f'histogram_centeredl1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
     plt.clf()
 
     return p, quant_loss
@@ -438,8 +437,8 @@ def print_nonzeros(model):
         print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} \
             ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count:7} | shape = {param.data.shape}')
 
-    print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {
-          total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
+    print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, \
+          Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
     return (round((nonzero/total)*100, 1))
 
 

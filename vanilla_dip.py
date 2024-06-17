@@ -39,8 +39,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     img_np, img_noisy_np, noisy_psnr = load_image(
         train_folder, image_name, sigma)
     print("noisy psnr:", noisy_psnr)
-    print(f'Starting vanilla DIP on {image_name} using {
-          optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
+    print(f'Starting vanilla DIP on {image_name} using {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
     print(f"Noisy PSNR is '{noisy_psnr}'")
 
     input_depth = 32
