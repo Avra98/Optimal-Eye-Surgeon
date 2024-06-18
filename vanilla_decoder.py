@@ -1,21 +1,19 @@
 from __future__ import print_function
-from utils.inpainting_utils import *
-from sam import SAM
 import argparse
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from utils.imp import *
-from utils.quant import *
 from torch.autograd import Variable
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+import warnings
 import torch.optim
 import torch
 from models.decoder import decodernw
 from models import *
 from utils.denoising_utils import *
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import os
-import warnings
+from utils.inpainting_utils import *
+from utils.imp import *
+from utils.quant import *
 warnings.filterwarnings("ignore")
 
 # Suppress warnings
@@ -27,7 +25,7 @@ torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 
 
-def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
+def main(image_name: str, lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.2,
          show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
          k: int = 5, weight_decay: float = 0.0):
 
@@ -57,17 +55,8 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
     s = sum(np.prod(list(p.size())) for p in net.parameters())
     print('Number of params in decoder: %d' % s)
 
-    print(f"Starting optimization with optimizer '{optim}'")
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(
-            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(
-            net.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optim == "SAM":
-        base_opt = torch.optim.SGD
-        optimizer = SAM(net.parameters(), base_opt, rho=reg, adaptive=False,
-                        lr=lr, weight_decay=weight_decay, momentum=beta)
+    print("Starting optimization with ADAM")
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
 
     psnr_list = []
 
@@ -140,8 +129,6 @@ if __name__ == "__main__":
                         help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000,
                         help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="ADAM",
-                        help="which optimizer")
     parser.add_argument("--reg", type=float, default=0.05,
                         help="regularization strength")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
@@ -156,6 +143,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, optim=args.optim, reg=args.reg, 
+    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, reg=args.reg, 
          sigma=args.sigma, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
          k=args.k, weight_decay=args.decay)

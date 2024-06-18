@@ -1,15 +1,9 @@
 from __future__ import print_function
-from sam import SAM
 import argparse
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
-import pickle as cPickle
 from utils.inpainting_utils import *
-from PIL import Image
-import time
 import torch.optim
 import torch
-from models.cnn import cnn
 from models import *
 from utils.imp import *
 from utils.quant import *
@@ -18,7 +12,6 @@ from utils.denoising_utils import *
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from scipy.ndimage import gaussian_filter
 import warnings
 warnings.filterwarnings("ignore")
 torch.backends.cudnn.enabled = True
@@ -28,7 +21,7 @@ torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 
 
-def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.1, num_layers: int = 6,
+def main(lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.1, num_layers: int = 6,
          show_every: int = 1000, device_id: int = 0, beta: float = 0.0, image_name: str = 'pepper',
          weight_decay: float = 0.0):
 
@@ -39,7 +32,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     img_np, img_noisy_np, noisy_psnr = load_image(
         train_folder, image_name, sigma)
     print("noisy psnr:", noisy_psnr)
-    print(f'Starting vanilla DIP on {image_name} using {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
+    print(f'Starting vanilla DIP on {image_name} using ADAM(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta})')
     print(f"Noisy PSNR is '{noisy_psnr}'")
 
     input_depth = 32
@@ -66,16 +59,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         act_fun='LeakyReLU'
     ).type(dtype)
 
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(
-            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(
-            net.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optim == "SAM":
-        base_opt = torch.optim.SGD
-        optimizer = SAM(net.parameters(), base_opt, rho=reg, adaptive=False,
-                        lr=lr, weight_decay=weight_decay, momentum=beta)
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
 
     def closure_sgd(net_input, img_var, noise_var):
         optimizer.zero_grad()
@@ -120,8 +104,6 @@ if __name__ == "__main__":
                         help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000,
                         help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="ADAM",
-                        help="which optimizer")
     parser.add_argument("--reg", type=float, default=0.05,
                         help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
@@ -139,6 +121,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(lr=args.lr, max_steps=args.max_steps, optim=args.optim, reg=args.reg, sigma=args.sigma,
+    main(lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
          num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
          image_name=args.image_name, weight_decay=args.decay)

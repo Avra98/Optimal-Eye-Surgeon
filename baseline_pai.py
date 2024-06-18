@@ -22,7 +22,6 @@ torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from sam import SAM
 
 import argparse
 

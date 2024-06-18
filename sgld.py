@@ -3,16 +3,15 @@ import matplotlib.pyplot as plt
 import os
 import warnings
 import numpy as np
-from utils.denoising_utils import *
-from models import *
-from utils.quant import *
-from utils.imp import *
 import torch
 import torch.optim
 from utils.inpainting_utils import *
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import argparse
-from sam import SAM
+from utils.denoising_utils import *
+from models import *
+from utils.quant import *
+from utils.imp import *
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -29,7 +28,7 @@ def add_noise(model, param_noise_sigma, lr):
         n.data = n.data + noise
 
 
-def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
+def main(image_name: str, lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
          weight_decay: float = 0.0):
 
@@ -69,17 +68,7 @@ def main(image_name: str, lr: float, max_steps: int, optim: str, reg: float = 0.
         act_fun='LeakyReLU'
     ).type(dtype)
 
-    print(f"Starting optimization with optimizer '{optim}'")
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(
-            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(
-            net.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optim == "SAM":
-        base_opt = torch.optim.SGD
-        optimizer = SAM(net.parameters(), base_opt, rho=reg, adaptive=False,
-                        lr=lr, weight_decay=weight_decay, momentum=beta)
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
 
     psnr_list = []
     reg_noise_std = 1. / 30.
@@ -155,8 +144,6 @@ if __name__ == "__main__":
                         help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000,
                         help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="ADAM",
-                        help="which optimizer")
     parser.add_argument("--reg", type=float, default=0.05,
                         help="regularization strength")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
@@ -172,6 +159,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, optim=args.optim, reg=args.reg, sigma=args.sigma,
+    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
          num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
          weight_decay=args.decay)

@@ -20,7 +20,7 @@ torch.backends.cudnn.benchmark = True
 dtype = torch.cuda.FloatTensor
 
 
-def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
+def main(lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
          ino: int = 0, weight_decay: float = 0.0, mask_opt: str = "single", 
          kl: float = 1e-5, prior_sigma: float = 0.0, net_choice: str = "sparse"):
@@ -128,18 +128,10 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         pad='reflection',
         act_fun='LeakyReLU').type(dtype)
 
-    print(f"Starting optimization with optimizer '{optim}'")
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(
-            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(
-            net.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optim == "SAM":
-        optimizer = torch.optim.SGD(
-            net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
+    print("Starting optimization with optimizer ADAM ")
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
 
-    fileid = f'{optim}(sigma={sigma},lr={lr},decay={weight_decay},beta={beta})'
+    fileid = f'ADAM(sigma={sigma},lr={lr},decay={weight_decay},beta={beta})'
     outdir = f'data/denoising/Set14/mask/{ino}/{
         fileid}/{mask_opt}/{prior_sigma}/{kl}'
     print(f"Output directory: {outdir}")
@@ -259,9 +251,6 @@ if __name__ == "__main__":
                         help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000,
                         help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="SAM",
-                        help="which optimizer")
-    # parser.add_argument("--IGR", type=str, default="Normal", help="true if SAM ")
     parser.add_argument("--reg", type=float, default=0.05,
                         help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
@@ -295,7 +284,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(images=args.images, lr=args.lr, max_steps=args.max_steps,
-         optim=args.optim, reg=args.reg, sigma=args.sigma, num_layers=args.num_layers,
+         reg=args.reg, sigma=args.sigma, num_layers=args.num_layers,
          show_every=args.show_every, beta=args.beta, device_id=args.device_id, ino=args.ino,
          weight_decay=args.decay, mask_opt=args.mask_opt, noise_steps=args.noise_steps,
          kl=args.kl, prior_sigma=args.prior_sigma, var=args.var, net_choice=args.net_choice)

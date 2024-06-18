@@ -1,29 +1,24 @@
 from __future__ import print_function
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import os
-from scipy.ndimage import gaussian_filter
 import warnings
-warnings.filterwarnings("ignore")
 import numpy as np
-from utils.denoising_utils import *
-from models import *
-from utils.quant import *
-from utils.imp import *
-from models.cnn import cnn
 import torch
 import torch.optim
-from PIL import Image
-import time
-from utils.inpainting_utils import * 
 import pickle as cPickle
-torch.backends.cudnn.enabled = True
-torch.backends.cudnn.benchmark =True
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import argparse
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from utils.inpainting_utils import * 
+from utils.denoising_utils import *
+from utils.quant import *
+from utils.imp import *
+from models import *
+
+warnings.filterwarnings("ignore")
 
 dtype = torch.cuda.FloatTensor
+torch.backends.cudnn.enabled = True
+torch.backends.cudnn.benchmark =True
 
 def main(sigma: float = 0.1, num_layers: int = 4, show_every: int=1000, device_id: int = 0, 
           image_name: str = "baboon", trans_type: str="pai", transferimage_name: str = "barbara",
