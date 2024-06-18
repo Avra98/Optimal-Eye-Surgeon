@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-#import torchvision
 import sys
 
 import numpy as np

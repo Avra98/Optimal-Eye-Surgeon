@@ -25,11 +25,10 @@ torch.backends.cudnn.benchmark =True
 dtype = torch.cuda.FloatTensor
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from sam import SAM
 
 import argparse
 
-def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float = 0.2,
+def main(lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
          image_name: str = 'baboon', weight_decay: float = 0.0, prune_iters: int = 0, percent: float = 0.0, num_epoch: int = 40000):
 
@@ -37,7 +36,7 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
     torch.cuda.current_device()
 
     img_np, img_noisy_np, noisy_psnr = load_image('images', image_name, sigma)
-    print(f"Starting IMP on DIP with {optim}(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta}) on image {image_name}")
+    print(f"Starting IMP on DIP with ADAM(sigma={sigma}, lr={lr}, decay={weight_decay}, beta={beta}) on image {image_name}")
     print(f"Noisy PSNR: {noisy_psnr}")
 
     input_depth = 32
@@ -64,18 +63,14 @@ def main(lr: float, max_steps: int, optim: str, reg: float = 0.0, sigma: float =
         act_fun='LeakyReLU'
     ).type(dtype)
 
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optim == "SAM":
-        optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay, momentum=beta)
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay)
 
     outdir = f'sparse_models_imp/{image_name}'
     print(f"Output directory: {outdir}")
     os.makedirs(f'{outdir}', exist_ok=True)
 
-    model, mask, psnr_history = iterative_pruning(net, net_input, img_np, img_noisy_np, percent, prune_iters, num_epoch, device=device_id)
+    model, mask, psnr_history = iterative_pruning(
+        net, net_input, img_np, img_noisy_np, percent, prune_iters, num_epoch, device=device_id)
     torch.cuda.empty_cache()
     print("Experiment done")
 
@@ -110,7 +105,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=100000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="SAM", help="which optimizer")
     parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
@@ -125,7 +119,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(lr=args.lr, max_steps=args.max_steps, optim=args.optim, reg=args.reg, sigma=args.sigma,
+    main(lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
          num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
          image_name=args.image_name, weight_decay=args.decay, prune_iters=args.prune_iters,
          percent=args.percent, num_epoch=args.num_epoch)
