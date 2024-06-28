@@ -146,7 +146,8 @@ def fill_noise(x, noise_type):
     else:
         assert False
 
-def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
+
+def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10, dtype=torch.float32):
     """Returns a pytorch.Tensor of size (1 x `input_depth` x `spatial_size[0]` x `spatial_size[1]`) 
     initialized in a specific way.
     Args:
@@ -160,18 +161,19 @@ def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
         spatial_size = (spatial_size, spatial_size)
     if method == 'noise':
         shape = [1, input_depth, spatial_size[0], spatial_size[1]]
-        net_input = torch.zeros(shape)
-        
+        net_input = torch.zeros(shape, dtype=dtype)
+
         fill_noise(net_input, noise_type)
-        net_input *= var            
-    elif method == 'meshgrid': 
+        net_input *= var
+    elif method == 'meshgrid':
         assert input_depth == 2
-        X, Y = np.meshgrid(np.arange(0, spatial_size[1])/float(spatial_size[1]-1), np.arange(0, spatial_size[0])/float(spatial_size[0]-1))
-        meshgrid = np.concatenate([X[None,:], Y[None,:]])
-        net_input=  np_to_torch(meshgrid)
+        X, Y = np.meshgrid(np.arange(0, spatial_size[1])/float(
+            spatial_size[1]-1), np.arange(0, spatial_size[0])/float(spatial_size[0]-1))
+        meshgrid = np.concatenate([X[None, :], Y[None, :]])
+        net_input = np_to_torch(meshgrid)
     else:
         assert False
-        
+
     return net_input
 
 def pil_to_np(img_PIL):

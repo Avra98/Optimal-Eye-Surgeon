@@ -8,7 +8,7 @@ def skip(
         filter_size_down=3, filter_size_up=3, filter_skip_size=1,
         need_sigmoid=True, need_bias=True, 
         pad='zero', upsample_mode='nearest', downsample_mode='stride', act_fun='LeakyReLU', 
-        need1x1_up=True) -> nn.Sequential:
+        need1x1_up=True, dtype=torch.float32) -> nn.Sequential:
     """Assembles encoder-decoder with skip connections.
 
     Arguments:

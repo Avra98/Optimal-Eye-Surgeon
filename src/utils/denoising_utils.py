@@ -12,7 +12,6 @@ import time
 import _pickle as cPickle
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True
-dtype = torch.cuda.FloatTensor
 
         
 def get_noisy_image(img_np, sigma):
