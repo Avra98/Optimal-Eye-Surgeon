@@ -93,9 +93,10 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
             torch.Tensor: The learned quantization probabilities (p).
             list: A list of quantization loss values recorded during training.
     """
+    device = next(model.parameters()).device
     mse = torch.nn.MSELoss()
-    img_var = np_to_torch(img_var)
-    noise_var = np_to_torch(noise_var)
+    img_var = np_to_torch(img_var).to(device)
+    noise_var = np_to_torch(noise_var).to(device)
 
     # Initialize quantization probabilities (p) and make sure they require gradients
     _, p = quant_initialization(model, q)
