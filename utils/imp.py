@@ -25,7 +25,6 @@ from utils.inpainting_utils import *
 import pickle as cPickle
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True
-dtype = torch.cuda.FloatTensor
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 

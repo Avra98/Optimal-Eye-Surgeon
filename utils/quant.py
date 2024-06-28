@@ -19,7 +19,7 @@ from utils.common_utils import *
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
-dtype = torch.cuda.FloatTensor
+# TODO modernize device here too
 
 
 def sigmoid(x):
@@ -55,17 +55,15 @@ def soft_quantize(logits, q, temperature=0.2):
     return quantized_output
 
 
-def quant_initialization(model, prior_sigma, q=3):
+def quant_initialization(model, q=3):
     device = next(model.parameters()).device
 
     w0, num_params = [], 0
     for layer, param in enumerate(model.parameters()):
         w0.append(param.data.view(-1).detach().clone())
     w0 = torch.cat(w0)
-    p = nn.Parameter(inverse_sigmoid(
-        1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
-    prior = sigmoid(prior_sigma)
-    return w0, p, prior
+    p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
+    return w0, p
 
 
 def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
@@ -95,37 +93,41 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
             torch.Tensor: The learned quantization probabilities (p).
             list: A list of quantization loss values recorded during training.
     """
-    mse = torch.nn.MSELoss().type(dtype)
-    img_var = np_to_torch(img_var).type(dtype)
-    noise_var = np_to_torch(noise_var).type(dtype)
+    mse = torch.nn.MSELoss()
+    img_var = np_to_torch(img_var)
+    noise_var = np_to_torch(noise_var)
 
     # Initialize quantization probabilities (p) and make sure they require gradients
-    _, p, _ = quant_initialization(model, 1.0, q)
+    _, p = quant_initialization(model, q)
     p.requires_grad_(True)
     optimizer_p = torch.optim.Adam([p], lr=lr)
+    # TODO: add learning rate scheduler ?
     prior = sigmoid(prior_sigma)
 
     all_logits = []
     quant_loss = []
 
-    for epoch in range(num_steps):
+    for iteration in range(num_steps):
 
+        # make a copy of the model and freeze the weights
         model_copy = copy.deepcopy(model)
         for param in model_copy.parameters():
             param.requires_grad = False
 
+        # Update quantization probabilities using gradient descent
         optimizer_p.zero_grad()
         k = 0
         for i, param in enumerate(model_copy.parameters()):
             t = len(param.view(-1))
             logits = p[:, k:(k+t)].t()
-            quantized_weights = soft_quantize(
+            quantized_weights = soft_quantize (
                 torch.sigmoid(logits), q, temperature=0.2)
             param.mul_(quantized_weights.view(param.data.shape))
             k += t
 
         # Forward pass after quantization
         output = model_copy(net_input)
+        # Compute the regularization term based on the KL divergence
         reg = (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) +
                (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
 
@@ -136,13 +138,13 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
 
         # Update quantization probabilities using gradient descent
         with torch.no_grad():
-            if epoch % show_every == 0:
-                print("epoch: ", epoch, "quantization_loss: ",
+            if iteration % show_every == 0:
+                print("iteration: ", iteration, "quantization_loss: ",
                       quantization_loss.item())
                 quant_loss.append(quantization_loss.item())
                 print("p mean is:", p.mean())
 
-        if epoch == num_steps - 1:
+        if iteration == num_steps - 1:
             logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
             all_logits.extend(logits_flat)
 
@@ -289,12 +291,12 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
     """
     # Setting the device for the model and tensors
     masked_model = masked_model.to(device)
-    img_var = np_to_torch(img_var).type(dtype).to(device)
-    noise_var = np_to_torch(noise_var).type(dtype).to(device)
+    img_var = np_to_torch(img_var).to(device)
+    noise_var = np_to_torch(noise_var).to(device)
     net_input = net_input.to(device)
     mask = mask.to(device)
 
-    mse = torch.nn.MSELoss().type(dtype)
+    mse = torch.nn.MSELoss()
     psnr_lists = []
     print_nonzeros(masked_model)
     # Define the optimizer
@@ -340,11 +342,11 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
 def train_dense(net, net_input,  img_var, noise_var, learning_rate=1e-3, max_step=40000, show_every=1000, lr_step=100000, lr_gamma=0.1, device='cuda:0'):
     # Setting the device for the model and tensors
     net = net.to(device)
-    img_var = np_to_torch(img_var).type(dtype).to(device)
-    noise_var = np_to_torch(noise_var).type(dtype).to(device)
+    img_var = np_to_torch(img_var).to(device)
+    noise_var = np_to_torch(noise_var).to(device)
     net_input = net_input.to(device)
 
-    mse = torch.nn.MSELoss().type(dtype)
+    mse = torch.nn.MSELoss()
     psnr_lists = []
     print_nonzeros(net)
     # Define the optimizer
@@ -382,9 +384,9 @@ def train_dense(net, net_input,  img_var, noise_var, learning_rate=1e-3, max_ste
 
 def train_deep_decoder(k, img_var, noise_var, learning_rate=0.01, max_step=40000, show_every=1000, device='cuda:1'):
     output_depth = img_var.shape[0]
-    img_var = np_to_torch(img_var).type(dtype).to(device)
-    noise_var = np_to_torch(noise_var).type(dtype).to(device)
-    mse = torch.nn.MSELoss().type(dtype)
+    img_var = np_to_torch(img_var).to(device)
+    noise_var = np_to_torch(noise_var).to(device)
+    mse = torch.nn.MSELoss()
     num_channels = [128]*k
     totalupsample = 2**len(num_channels)
     width = int(img_var.shape[2]/totalupsample)
@@ -393,9 +395,9 @@ def train_deep_decoder(k, img_var, noise_var, learning_rate=0.01, max_step=40000
     net_input = Variable(torch.zeros(shape))
     net_input.data.uniform_()
     net_input.data *= 1./10
-    net_input = net_input.type(dtype)
+    # net_input = net_input.type(dtype)
     net = decodernw(output_depth, num_channels_up=num_channels,
-                    upsample_first=True).type(dtype)
+                    upsample_first=True)
     # print total number of paramter in net
     s = sum([np.prod(list(p.size())) for p in net.parameters()])
     print('Number of params in decoder is: %d' % s)

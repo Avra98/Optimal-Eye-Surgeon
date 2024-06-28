@@ -4,26 +4,46 @@ import os
 import warnings
 import torch
 import torch.optim
+import argparse
+import logging
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from utils.denoising_utils import *
 from utils.quant import *
 from utils.imp import *
 from models import *
-import argparse
 
 # Suppress warnings
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
-# Enable CUDA
+# Enable cuDNN benchmark for performance
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-dtype = torch.cuda.FloatTensor
-torch.set_default_tensor_type(dtype)
+## TODO: convert type to modern syntax
+# e.g using model.to(device) and automatic using device of input tensor
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+# TODO: finish implementing logging
 
 def main(image_name: str, lr: float, max_steps: int,
-         sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: int = 0,
+         sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0',
          mask_opt: str = "det", kl: float = 1e-9, sparsity: float = 0.05):
+    device = f'cuda{device}' if device.isdigit() else device
+    torch.set_default_device(device)
+    torch.set_default_dtype(torch.float32)
+
+    print(
+        f'DEVICE: {device}\n'
+        f'LR: {lr}\n'
+        f'OPTIM: ADAM\n'
+        f'SPARSITY: {sparsity}\n'
+        f'NOISE: {sigma}\n'
+        f'KL REG: {kl}\n'
+        f'LAYERS: {num_layers}\n'
+        f'...Showing every {show_every} steps for {max_steps} iterations\n...'
+    )
+
     prior_sigma = inverse_sigmoid(sparsity)
 
     train_folder = 'images'
@@ -31,9 +51,8 @@ def main(image_name: str, lr: float, max_steps: int,
 
     input_depth = 32
     output_depth = 3
-    num_steps = max_steps
 
-    net_input = get_noise(input_depth, "noise", img_np.shape[1:]).type(dtype)
+    net_input = get_noise(input_depth, "noise", img_np.shape[1:])
 
     net = skip(
         input_depth, output_depth,
@@ -50,7 +69,7 @@ def main(image_name: str, lr: float, max_steps: int,
         need_bias=True,
         pad='reflection',
         act_fun='LeakyReLU'
-    ).type(dtype)
+    )
 
     outdir = f'sparse_models/{image_name}'
     os.makedirs(f'{outdir}/out_images/', exist_ok=True)
@@ -60,7 +79,7 @@ def main(image_name: str, lr: float, max_steps: int,
     print(f"All results will be saved in: {outdir}")
 
     p, quant_loss = learn_quantization_probabilities_dip(
-        net, net_input, img_np, img_noisy_np, num_steps, lr, image_name, q=2, 
+        net, net_input, img_np, img_noisy_np, max_steps, lr, image_name, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
 
     mask = make_mask_with_sparsity(p, sparsity)
