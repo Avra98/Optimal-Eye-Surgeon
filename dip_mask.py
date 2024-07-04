@@ -19,12 +19,9 @@ from models import *
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-## TODO: convert type to modern syntax
-# e.g using model.to(device) and automatic using device of input tensor
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-# TODO: finish implementing logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+# # TODO: finish implementing logging
 
 def main(image_name: str, lr: float, max_steps: int,
          sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0',
