@@ -19,8 +19,6 @@ from utils.common_utils import *
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
-# TODO modernize device here too
-
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
@@ -54,6 +52,15 @@ def soft_quantize(logits, q, temperature=0.2):
     quantized_output = torch.sum(soft_samples * quant_values, dim=-1)
     return quantized_output
 
+def structured_init(model, q=3):
+    device = next(model.parameters()).device
+
+    w0, num_params = [], 0
+    for layer, param in enumerate(model.parameters()):
+        w0.append(param.data.view(-1).detach().clone())
+    w0 = torch.cat(w0)
+    p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
+    return w0, p
 
 def quant_initialization(model, q=3):
     device = next(model.parameters()).device
@@ -64,7 +71,6 @@ def quant_initialization(model, q=3):
     w0 = torch.cat(w0)
     p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
     return w0, p
-
 
 def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
     """Learns quantization probabilities using a deep inverse prior (DIP) approach.
@@ -100,6 +106,75 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
 
     # Initialize quantization probabilities (p) and make sure they require gradients
     _, p = quant_initialization(model, q)
+    p.requires_grad_(True)
+    optimizer_p = torch.optim.Adam([p], lr=lr)
+    # TODO: add learning rate scheduler ?
+    prior = sigmoid(prior_sigma)
+
+    all_logits = []
+    quant_loss = []
+
+    for iteration in range(num_steps):
+
+        # make a copy of the model and freeze the weights
+        model_copy = copy.deepcopy(model)
+        for param in model_copy.parameters():
+            param.requires_grad = False
+
+        # Update quantization probabilities using gradient descent
+        optimizer_p.zero_grad()
+        k = 0
+        for i, param in enumerate(model_copy.parameters()):
+            t = len(param.view(-1))
+            logits = p[:, k:(k+t)].t()
+            quantized_weights = soft_quantize (
+                torch.sigmoid(logits), q, temperature=0.2)
+            param.mul_(quantized_weights.view(param.data.shape))
+            k += t
+
+        # Forward pass after quantization
+        output = model_copy(net_input)
+        # Compute the regularization term based on the KL divergence
+        reg = (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) +
+               (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
+
+        # Compute loss based on the dissimilarity between quantized model output and noisy image
+        quantization_loss = mse(output, noise_var) + kl*reg
+        quantization_loss.backward()
+        optimizer_p.step()
+
+        # Update quantization probabilities using gradient descent
+        with torch.no_grad():
+            if iteration % show_every == 0:
+                print("iteration: ", iteration, "quantization_loss: ",
+                      quantization_loss.item())
+                quant_loss.append(quantization_loss.item())
+                print("p mean is:", p.mean())
+
+        if iteration == num_steps - 1:
+            logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
+            all_logits.extend(logits_flat)
+
+    os.makedirs(f'histogram_centeredl1_{ino}', exist_ok=True)
+
+    # Plot a histogram for all the quantized weights
+    plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
+    plt.title(f'Distribution of p for sparsity level {sparsity}')
+    plt.xlabel('Value of p')
+    plt.ylabel('Frequency')
+    plt.savefig(f'histogram_centeredl1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
+    plt.clf()
+
+    return p, quant_loss
+
+def learn_p_structured_pruning(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
+    device = next(model.parameters()).device
+    mse = torch.nn.MSELoss()
+    img_var = np_to_torch(img_var).to(device)
+    noise_var = np_to_torch(noise_var).to(device)
+
+    # Initialize quantization probabilities (p) and make sure they require gradients
+    _, p = structured_init(model, q)
     p.requires_grad_(True)
     optimizer_p = torch.optim.Adam([p], lr=lr)
     # TODO: add learning rate scheduler ?
