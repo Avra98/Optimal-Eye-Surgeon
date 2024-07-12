@@ -22,8 +22,10 @@ dtype = torch.cuda.FloatTensor
 torch.set_default_tensor_type(dtype)
 
 def main(image_name: str, lr: float, max_steps: int,
-         sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: int = 0,
+         sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device_id: int = 0,
          mask_opt: str = "det", kl: float = 1e-9, sparsity: float = 0.05):
+    torch.cuda.set_device(device_id)
+    torch.cuda.current_device()
     prior_sigma = inverse_sigmoid(sparsity)
 
     train_folder = 'images'
@@ -139,5 +141,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, device=args.device,
+         num_layers=args.num_layers, show_every=args.show_every, device_id=args.device_id,
          mask_opt=args.mask_opt, kl=args.kl, sparsity=args.sparsity)
