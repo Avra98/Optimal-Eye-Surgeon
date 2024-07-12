@@ -24,6 +24,8 @@ torch.set_default_tensor_type(dtype)
 def main(image_name: str, lr: float, max_steps: int,
          sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device_id: int = 0,
          mask_opt: str = "det", kl: float = 1e-9, sparsity: float = 0.05):
+
+    ### === Setup ===
     torch.cuda.set_device(device_id)
     torch.cuda.current_device()
     prior_sigma = inverse_sigmoid(sparsity)
@@ -61,6 +63,9 @@ def main(image_name: str, lr: float, max_steps: int,
     print(f"The noisy PSNR is '{noisy_psnr}'.")
     print(f"All results will be saved in: {outdir}")
 
+    ### === OES ===
+
+    # Learn quantization probability, p, corresponding to each parameter
     p, quant_loss = learn_quantization_probabilities_dip(
         net, net_input, img_np, img_noisy_np, num_steps, lr, image_name, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
