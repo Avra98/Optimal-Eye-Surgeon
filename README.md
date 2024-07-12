@@ -30,7 +30,7 @@ This repository contains the source code for pruning image generator networks at
 Conda:
 ```sh
 conda create --name oes python==3.7.16 # optionally specify python version
-``` 
+```
 or with pyenv:
 ```sh
 pyenv virtualenv 3.7.16 oes # optionally specify python verion
@@ -43,7 +43,7 @@ Conda:
  ```
 Pyenv:
 ```
-pyenv virtualenv oes
+pyenv activate oes
 ```
 4. Install packages:
 ```
@@ -116,7 +116,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 
 
 ```python
-python baseline.baseline_pai --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
+python baseline/baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
 Chose among the following options for prune_type:
 
@@ -132,7 +132,7 @@ Chose among the following options for prune_type:
 
 #### IMP
 ```python
-python baselines.baseline_pat --image_name="pepper" --prune_iters=14 --percent=0.2
+python baselines/baseline_pat.py --image_name="pepper" --prune_iters=14 --percent=0.2
 ```
 The above line runs IMP for 14 iterations with 20% deletion of weights at each iteration. Resulting in 5% sparsity. (drastic pruning degrades performance)
 
