@@ -6,7 +6,6 @@ import glob
 import sys
 from scipy.ndimage import gaussian_filter
 import warnings
-warnings.filterwarnings("ignore")
 import numpy as np
 from utils.denoising_utils import *
 from models import *
@@ -17,16 +16,15 @@ import torch
 import torch.optim
 import time
 from PIL import Image
-#from skimage.measure import compare_psnr
-from utils.inpainting_utils import * 
 import pickle as cPickle
+import argparse
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from utils.inpainting_utils import *
+warnings.filterwarnings("ignore")
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True
 dtype = torch.cuda.FloatTensor
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-
-import argparse
 
 def main(lr: float, max_steps: int, reg: float = 0.0, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device_id: int = 0, beta: float = 0.0,
