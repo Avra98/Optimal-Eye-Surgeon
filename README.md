@@ -24,16 +24,10 @@ This repository contains the source code for pruning image generator networks at
 
 
 ##  Setup
-1. Install python and pip (if not already installed).
-2. Creating the environment and installing packages:
-
-Conda:
-```sh
-conda create --name oes python==3.7.16 # optionally specify python version
-``` 
-or with pyenv:
-```sh
-pyenv virtualenv 3.7.16 oes # optionally specify python verion
+1. Install conda (if not already installed).
+2. Create the environment: 
+```bash
+conda create --name oes 
 ```
 3. Activate environment:
 
@@ -41,12 +35,8 @@ Conda:
  ```
  conda activate oes
  ```
-Pyenv:
-```
-pyenv virtualenv oes
-```
-4. Install packages:
-```
+4. Install the required packages:
+```bash
 pip install -r requirements.txt
 ```
 
@@ -89,23 +79,12 @@ python train_sparse.py --image_name="pepper"
 
 For comparing with baselines, use the following command:
 
-Deep decoder:
 
 ```python
-python vanilla_decoder.py --image_name="pepper"
+python baselines.method --image_name="pepper"
 ```
+and replace "method" with "vanilla_dip", "sgld" or "vanilla_decoder"
 
-Vanilla deep image prior:
-
-```python
-python vanilla_dip.py --image_name="pepper"
-```
-
-SGLD:
-
-```python
-python sgld.py --image_name="pepper"
-```
 
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
@@ -134,7 +113,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 
 
 ```python
-python baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
+python baseline.baseline_pai --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
 Chose among the following options for prune_type:
 
@@ -150,7 +129,7 @@ Chose among the following options for prune_type:
 
 #### IMP
 ```python
-python baseline_pat.py --image_name="pepper" --prune_iters=14 --percent=0.2
+python baseline.baseline_pat --image_name="pepper" --prune_iters=14 --percent=0.2
 ```
 The above line runs IMP for 14 iterations with 20% deletion of weights at each iteration. Resulting in 5% sparsity. (drastic pruning degrades performance)
 
