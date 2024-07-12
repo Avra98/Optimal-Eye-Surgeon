@@ -24,10 +24,16 @@ This repository contains the source code for pruning image generator networks at
 
 
 ##  Setup
-1. Install conda (if not already installed).
-2. Create the environment: 
-```bash
-conda create --name oes 
+1. Install python and pip (if not already installed).
+2. Creating the environment and installing packages:
+
+Conda:
+```sh
+conda create --name oes python==3.7.16 # optionally specify python version
+``` 
+or with pyenv:
+```sh
+pyenv virtualenv 3.7.16 oes # optionally specify python verion
 ```
 3. Activate environment:
 
@@ -35,8 +41,12 @@ Conda:
  ```
  conda activate oes
  ```
-4. Install the required packages:
-```bash
+Pyenv:
+```
+pyenv virtualenv oes
+```
+4. Install packages:
+```
 pip install -r requirements.txt
 ```
 
@@ -77,14 +87,7 @@ After obtaining a mask by the above procedure, run the following to train the sp
 python train_sparse.py --image_name="pepper"
 ```
 
-For comparing with baselines, use the following command:
-
-
-```python
-python baselines.method --image_name="pepper"
-```
-and replace "method" with "vanilla_dip", "sgld" or "vanilla_decoder"
-
+For comparing with baselines, see [Baseline pruning methods](#finding-4-baseline-pruning-methods).
 
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks
@@ -129,7 +132,7 @@ Chose among the following options for prune_type:
 
 #### IMP
 ```python
-python baseline.baseline_pat --image_name="pepper" --prune_iters=14 --percent=0.2
+python baselines.baseline_pat --image_name="pepper" --prune_iters=14 --percent=0.2
 ```
 The above line runs IMP for 14 iterations with 20% deletion of weights at each iteration. Resulting in 5% sparsity. (drastic pruning degrades performance)
 
