@@ -24,32 +24,20 @@ This repository contains the source code for pruning image generator networks at
 
 
 ##  Setup
-1. Install python and pip (if not already installed).
-2. Creating the environment and installing packages:
-
-Conda:
-```sh
-conda create --name oes python==3.7.16 # optionally specify python version
-```
-or with pyenv:
-```sh
-pyenv virtualenv 3.7.16 oes # optionally specify python verion
+1. Install conda (if not already installed).
+2. Create the environment:
+```bash
+conda create --name oes python==3.7.16
 ```
 3. Activate environment:
-
 Conda:
  ```
  conda activate oes
  ```
-Pyenv:
+4. Install the required packages:
+```bash
+pip install -r requirements.txt && pip install -e .
 ```
-pyenv activate oes
-```
-4. Install packages:
-```
-pip install -r requirements.txt
-```
-
 
 ## Working
 
@@ -116,7 +104,7 @@ python transfer.py --trans_type="pat" --transferimage_name="pepper" --image_name
 
 
 ```python
-python baseline/baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
+python baselines/baseline_pai.py --image_name="pepper" --prune_type="grasp_local" --sparse=0.9
 ```
 Chose among the following options for prune_type:
 

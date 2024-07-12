@@ -97,8 +97,7 @@ def main(image_name: str, lr: float, max_steps: int, reg: float = 0.0, sigma: fl
         add_noise(net, param_noise_sigma, lr)
 
         if j % show_every == 0 and j != 0:
-            print(f"At step '{j}', psnr is '{
-                  psnr}', noisy psnr is '{psnr_noisy}'")
+            print(f"At step '{j}', psnr is '{psnr}', noisy psnr is '{psnr_noisy}'")
             psnr_list.append(psnr)
 
     plt.plot(psnr_list)
