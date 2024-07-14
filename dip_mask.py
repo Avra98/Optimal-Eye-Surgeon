@@ -51,7 +51,7 @@ def main(image_name: str, lr: float, max_steps: int,
 
     net_input = get_noise(input_depth, "noise", img_np.shape[1:])
 
-    net = skip(
+    net = skip_replacement(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],

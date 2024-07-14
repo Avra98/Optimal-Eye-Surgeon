@@ -80,7 +80,7 @@ def act(act_fun='LeakyReLU'):
         'ELU': nn.ELU(),
         'none': nn.Identity()
     }
-    return activation_functions.get(act_fun))
+    return activation_functions.get(act_fun)
 
 
 def bn(num_features):

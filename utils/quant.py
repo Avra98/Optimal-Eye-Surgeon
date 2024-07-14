@@ -332,7 +332,8 @@ def mask_network(mask, model):
     mask = mask.to(device)
 
     k = 0
-    for param in model.parameters():
+    for name, param in model.named_parameters():
+        print(name, param.data.shape)
         t = len(param.view(-1))
         param.data = param.data * mask[k:(k + t)].view(param.data.shape)
         k += t
