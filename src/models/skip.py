@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from collections import OrderedDict
 from .common import *
 
 def skip(
@@ -36,30 +37,27 @@ def skip(
     if not (isinstance(filter_size_up, list) or isinstance(filter_size_up, tuple)) :
         filter_size_up   = [filter_size_up]*n_scales
 
-    last_scale = n_scales - 1 
-
-    cur_depth = None
-
     model = nn.Sequential()
     model_tmp = model
 
     input_depth = num_input_channels
-    for i in range(len(num_channels_down)):
+    for i in range(n_scales):
 
         deeper = nn.Sequential()
-        skip = nn.Sequential()
+        # skip = nn.Sequential()
 
-        if num_channels_skip[i] != 0:
-            model_tmp.add(Concat(1, skip, deeper))
-        else:
-            model_tmp.add(deeper)
+        model_tmp.add(deeper)
         
-        model_tmp.add(bn(num_channels_skip[i] + (num_channels_up[i + 1] if i < last_scale else num_channels_down[i])))
+        if i < n_scales-1:
+            model_tmp.add(nn.BatchNorm2d(num_channels_up[i + 1]))
+        else:
+            model_tmp.add(nn.BatchNorm2d(num_channels_down[i]))
+        # model_tmp.add(bn((num_channels_up[i + 1] if i < n_scales-1 else num_channels_down[i])))
 
-        if num_channels_skip[i] != 0:
-            skip.add(conv(input_depth, num_channels_skip[i], filter_skip_size, bias=need_bias, pad=pad))
-            skip.add(bn(num_channels_skip[i]))
-            skip.add(act(act_fun))
+        # if num_channels_skip[i] != 0:
+        #     skip.add(conv(input_depth, num_channels_skip[i], filter_skip_size, bias=need_bias, pad=pad))
+        #     skip.add(bn(num_channels_skip[i]))
+        #     skip.add(act(act_fun))
             
         # skip.add(Concat(2, GenNoise(nums_noise[i]), skip_part))
 
@@ -73,7 +71,7 @@ def skip(
 
         deeper_main = nn.Sequential()
 
-        if i == len(num_channels_down) - 1:
+        if i == n_scales - 1:
             # The deepest
             k = num_channels_down[i]
         else:
@@ -82,7 +80,7 @@ def skip(
 
         deeper.add(nn.Upsample(scale_factor=2, mode=upsample_mode[i]))
 
-        model_tmp.add(conv(num_channels_skip[i] + k, num_channels_up[i], filter_size_up[i], 1, bias=need_bias, pad=pad))
+        model_tmp.add(conv(k, num_channels_up[i], filter_size_up[i], 1, bias=need_bias, pad=pad))
         model_tmp.add(bn(num_channels_up[i]))
         model_tmp.add(act(act_fun))
 
@@ -101,69 +99,58 @@ def skip(
 
     return model
 
+def skip_replacement(
+    num_input_channels=2, num_output_channels=1, 
+    num_channels_down=[16, 32, 64, 128, 128], num_channels_up=[16, 32, 64, 128, 128], 
+    filter_size_down=3, filter_size_up=3, 
+    need_sigmoid=True, need_bias=True, 
+    pad='zero', upsample_mode='nearest', downsample_mode='stride', act_fun='LeakyReLU', 
+    need1x1_up=True) -> nn.Sequential:
 
+    assert len(num_channels_down) == len(num_channels_up)
+    n_scales = len(num_channels_down)
 
+    upsample_mode = [upsample_mode] * n_scales if not isinstance(upsample_mode, (list, tuple)) else upsample_mode
+    downsample_mode = [downsample_mode] * n_scales if not isinstance(downsample_mode, (list, tuple)) else downsample_mode
+    filter_size_down = [filter_size_down] * n_scales if not isinstance(filter_size_down, (list, tuple)) else filter_size_down
+    filter_size_up = [filter_size_up] * n_scales if not isinstance(filter_size_up, (list, tuple)) else filter_size_up
 
-# def skip(num_input_channels=2, num_output_channels=1, 
-#          num_channels_down=[16, 32, 64, 128, 128], num_channels_up=[16, 32, 64, 128, 128], 
-#          num_channels_skip=[4, 4, 4, 4, 4], 
-#          filter_size_down=3, filter_size_up=3, filter_skip_size=1,
-#          need_sigmoid=True, need_bias=True, 
-#          pad='zero', upsample_mode='nearest', downsample_mode='stride', 
-#          act_fun='LeakyReLU', need1x1_up=True):
-#     """
-#     Assembles encoder-decoder with skip connections.
-#     """
+    layers = OrderedDict()
+    input_depth = num_input_channels
 
-#     assert len(num_channels_down) == len(num_channels_up) == len(num_channels_skip)
-#     n_scales = len(num_channels_down)
+    for i in range(n_scales):
+        deeper = OrderedDict()
 
-#     model = nn.Sequential()
-#     model_tmp = model
+        deeper[f'down_conv1_{i}'] = conv(input_depth, num_channels_down[i], filter_size_down[i], 2, bias=need_bias, pad=pad, downsample_mode=downsample_mode[i])
+        deeper[f'down_bn1_{i}'] = nn.BatchNorm2d(num_channels_down[i])
+        deeper[f'down_act1_{i}'] = act(act_fun)
 
-#     input_depth = num_input_channels
-#     for scale in range(n_scales):
+        deeper[f'down_conv2_{i}'] = conv(num_channels_down[i], num_channels_down[i], filter_size_down[i], bias=need_bias, pad=pad)
+        deeper[f'down_bn2_{i}'] = nn.BatchNorm2d(num_channels_down[i])
+        deeper[f'down_act2_{i}'] = act(act_fun)
 
-#         deeper = nn.Sequential()
-#         skip = nn.Sequential()
+        if i < n_scales - 1:
+            deeper[f'upsample_{i}'] = nn.Upsample(scale_factor=2, mode=upsample_mode[i])
+            layers[f'deeper_{i}'] = nn.Sequential(deeper)
+            layers[f'up_bn_{i}'] = nn.BatchNorm2d(num_channels_up[i + 1])
+            layers[f'concat_conv_{i}'] = conv(num_channels_up[i + 1], num_channels_up[i], filter_size_up[i], 1, bias=need_bias, pad=pad)
+        else:
+            deeper[f'upsample_{i}'] = nn.Upsample(scale_factor=2, mode=upsample_mode[i])
+            layers[f'deeper_{i}'] = nn.Sequential(deeper)
+            layers[f'concat_conv_{i}'] = conv(num_channels_down[i], num_channels_up[i], filter_size_up[i], 1, bias=need_bias, pad=pad)
+        
+        layers[f'up_bn_{i}'] = nn.BatchNorm2d(num_channels_up[i])
+        layers[f'up_act_{i}'] = act(act_fun)
 
-#         if num_channels_skip[scale] != 0:
-#             model_tmp.add_module(f'scale{scale}_skip_concat', Concat(1, skip, deeper))
-#         else:
-#             model_tmp.add_module(f'scale{scale}_deeper', deeper)
+        if need1x1_up:
+            layers[f'conv1x1_{i}'] = conv(num_channels_up[i], num_channels_up[i], 1, bias=need_bias, pad=pad)
+            layers[f'bn1x1_{i}'] = nn.BatchNorm2d(num_channels_up[i])
+            layers[f'act1x1_{i}'] = act(act_fun)
 
-#         if num_channels_skip[scale] != 0:
-#             skip.add_module(f'scale{scale}_skip_conv', conv(input_depth, num_channels_skip[scale], filter_skip_size, bias=need_bias, pad=pad))
-#             skip.add_module(f'scale{scale}_skip_bn', bn(num_channels_skip[scale]))
-#             skip.add_module(f'scale{scale}_skip_act', act(act_fun))
+        input_depth = num_channels_down[i]
 
-#         deeper.add_module(f'scale{scale}_downsample_conv1', conv(input_depth, num_channels_down[scale], filter_size_down, 2, bias=need_bias, pad=pad, downsample_mode=downsample_mode))
-#         deeper.add_module(f'scale{scale}_downsample_bn1', bn(num_channels_down[scale]))
-#         deeper.add_module(f'scale{scale}_downsample_act1', act(act_fun))
+    layers['final_conv'] = conv(num_channels_up[0], num_output_channels, 1, bias=need_bias, pad=pad)
+    if need_sigmoid:
+        layers['sigmoid'] = nn.Sigmoid()
 
-#         deeper.add_module(f'scale{scale}_downsample_conv2', conv(num_channels_down[scale], num_channels_down[scale], filter_size_down, bias=need_bias, pad=pad))
-#         deeper.add_module(f'scale{scale}_downsample_bn2', bn(num_channels_down[scale]))
-#         deeper.add_module(f'scale{scale}_downsample_act2', act(act_fun))
-
-#         deeper_main = nn.Sequential()
-#         if scale < n_scales - 1:
-#             model_tmp.add_module(f'scale{scale}_upsample', deeper_main)
-
-#             deeper.add_module(f'scale{scale}_upsample', nn.Upsample(scale_factor=2, mode=upsample_mode[scale]))
-#             model_tmp.add_module(f'scale{scale}_merge_conv', conv(num_channels_skip[scale] + num_channels_up[scale + 1], num_channels_up[scale], filter_size_up, 1, bias=need_bias, pad=pad))
-#             model_tmp.add_module(f'scale{scale}_merge_bn', bn(num_channels_up[scale]))
-#             model_tmp.add_module(f'scale{scale}_merge_act', act(act_fun))
-
-#             if need1x1_up:
-#                 model_tmp.add_module(f'scale{scale}_merge_conv1x1', conv(num_channels_up[scale], num_channels_up[scale], 1, bias=need_bias, pad=pad))
-#                 model_tmp.add_module(f'scale{scale}_merge_bn1x1', bn(num_channels_up[scale]))
-#                 model_tmp.add_module(f'scale{scale}_merge_act1x1', act(act_fun))
-
-#         input_depth = num_channels_down[scale]
-#         model_tmp = deeper_main
-
-#     model.add_module('final_conv', conv(num_channels_up[0], num_output_channels, 1, bias=need_bias, pad=pad))
-#     if need_sigmoid:
-#         model.add_module('final_sigmoid', nn.Sigmoid())
-
-#     return model
+    return nn.Sequential(layers)

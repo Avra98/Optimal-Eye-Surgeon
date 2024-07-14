@@ -73,23 +73,14 @@ class Swish(nn.Module):
         return x * self.s(x)
 
 
-def act(act_fun = 'LeakyReLU'):
-    '''
-        Either string defining an activation function or module (e.g. nn.ReLU)
-    '''
-    if isinstance(act_fun, str):
-        if act_fun == 'LeakyReLU':
-            return nn.LeakyReLU(0.2, inplace=True)
-        elif act_fun == 'Swish':
-            return Swish()
-        elif act_fun == 'ELU':
-            return nn.ELU()
-        elif act_fun == 'none':
-            return nn.Sequential()
-        else:
-            assert False
-    else:
-        return act_fun()
+def act(act_fun='LeakyReLU'):
+    activation_functions = {
+        'LeakyReLU': nn.LeakyReLU(0.2, inplace=True),
+        'Swish': Swish(),
+        'ELU': nn.ELU(),
+        'none': nn.Identity()
+    }
+    return activation_functions.get(act_fun))
 
 
 def bn(num_features):
