@@ -4,12 +4,13 @@ import os
 import warnings
 import torch
 import torch.optim
+import argparse
+import yaml
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from utils.denoising_utils import *
 from utils.quant import *
 from utils.imp import *
 from models import *
-import argparse
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -127,24 +128,57 @@ if __name__ == "__main__":
         'baboon', 'barbara', 'lenna', 'pepper'
     ]
 
-    parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', required=False, help="which image to denoise")
-    parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=60000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--optim", type=str, default="SAM", help="which optimizer")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
-    parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int, default=1000, help="show_every")
-    parser.add_argument("--device_id", type=int, default=0, help="specify which gpu")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
-    parser.add_argument("--mask_opt", type=str, default="det", help="mask type")
-    parser.add_argument("--noise_steps", type=int, default=60000, help="number of steps for noise")
-    parser.add_argument("--kl", type=float, default=1e-9, help="regularization strength of kl")
-    parser.add_argument("--sparsity", type=float, default=0.05, help="fraction to keep")
+    parser.add_argument("--image_name", type=str, choices=image_choices, help="which image to denoise")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--sigma", type=float, help="noise-level")
+    parser.add_argument("--num_layers", type=int, help="number of layers")
+    parser.add_argument("--show_every", type=int, help="show_every")
+    parser.add_argument("--device_id", type=int, help="specify which gpu")
+    parser.add_argument("--mask_opt", type=str, help="mask type")
+    parser.add_argument("--kl", type=float, help="regularization strength of kl")
+    parser.add_argument("--sparsity", type=float, help="fraction to keep")
+    parser.add_argument("-f", "--file", type=str, default='config_mask.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, device_id=args.device_id,
-         mask_opt=args.mask_opt, kl=args.kl, sparsity=args.sparsity)
+    default_config = {
+        'image_name': 'pepper',
+        'lr': 0.01,
+        'max_steps': 60000,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 1000,
+        'device_id': 0,
+        'mask_opt': 'det',
+        'kl': 1e-9,
+        'sparsity': 0.05
+    }
+
+    config = {}
+    if args.file:
+        try:
+            with open(args.file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {args.file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(args.file, 'w') as file:
+                yaml.dump(default_config, file)
+            print(f"Default configuration file '{args.file}' has been created.")
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        image_name=config.get('image_name', default_config['image_name']),
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        mask_opt=config.get('mask_opt', default_config['mask_opt']),
+        kl=config.get('kl', default_config['kl']),
+        sparsity=config.get('sparsity', default_config['sparsity'])
+    )
