@@ -23,11 +23,11 @@ dtype = torch.cuda.FloatTensor
 
 
 def main(image_name: str, max_steps: int, sigma: float = 0.2,
-         num_layers: int = 4, show_every: int = 1000, device_id: int = 0, 
+         num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0', 
          ino: int = 0, sparsity: float = 0.05):
 
-    torch.cuda.set_device(device_id)
-    torch.cuda.current_device()
+    torch.set_default_device(device)
+    torch.get_default_device()
 
     train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
@@ -50,7 +50,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         need_bias=True,
         pad='reflection',
         act_fun='LeakyReLU'
-    ).type(dtype)
+    )
 
     outdir = f'sparse_models/{image_name}'
     os.makedirs(f'{outdir}/out_sparsenet/{sigma}', exist_ok=True)
@@ -59,13 +59,15 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     print(f"All results will be saved in: {outdir}/out_sparsenet/{sigma}")
 
     with open(f'{outdir}/masked_model_{image_name}.pkl', 'rb') as f:
-        masked_model = cPickle.load(f)
+        masked_model = cPickle.poad(f)
     with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
     with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
 
-    masked_model = mask_network(mask, masked_model)
+    print(masked_model.parameters())
+    exit()
+    # masked_model = mask_network(mask, masked_model)
 
     psnr, out = train_sparse(masked_model, net_input_list, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device_id)
@@ -113,9 +115,9 @@ if __name__ == "__main__":
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show every N steps")
-    parser.add_argument("--device_id", type=int, default=0, help="specify which GPU")
+    parser.add_argument("--device", type=str, default='cuda:0', help="specify which GPU")
 
     args = parser.parse_args()
 
     main(image_name=args.image_name, max_steps=args.max_steps, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, device_id=args.device_id)
+         num_layers=args.num_layers, show_every=args.show_every, device=args.device)

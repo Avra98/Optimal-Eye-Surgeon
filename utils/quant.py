@@ -3,13 +3,14 @@ from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import copy
 import torch
 import torch.nn as nn
+import torch.nn.utils.prune as prune
+import torch.nn.functional as F
+from torch.autograd import Variable
 import numpy as np
 import random
 import os
 import math
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
-from torch.autograd import Variable
 from models import *
 from models.decoder import decodernw
 from utils import *
@@ -332,8 +333,7 @@ def mask_network(mask, model):
     mask = mask.to(device)
 
     k = 0
-    for name, param in model.named_parameters():
-        print(name, param.data.shape)
+    for param in model.parameters():
         t = len(param.view(-1))
         param.data = param.data * mask[k:(k + t)].view(param.data.shape)
         k += t
