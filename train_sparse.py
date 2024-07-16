@@ -35,22 +35,22 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     input_depth = 32
     output_depth = 3
 
-    masked_model = skip(
+    masked_model = unet(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
-        num_channels_skip=[0] * num_layers,
+        # num_channels_skip=[0] * num_layers,
         upsample_mode='nearest',
         downsample_mode='avg',
         need1x1_up=False,
         filter_size_down=5,
         filter_size_up=3,
-        filter_skip_size=1,
+        # filter_skip_size=1,
         need_sigmoid=True,
         need_bias=True,
         pad='reflection',
         act_fun='LeakyReLU'
-    ).type(dtype)
+    )
 
     outdir = f'sparse_models/{image_name}'
     os.makedirs(f'{outdir}/out_sparsenet/{sigma}', exist_ok=True)
@@ -65,7 +65,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
 
-    masked_model = mask_network(mask, masked_model)
+    # masked_model = mask_network(mask, masked_model)
 
     psnr, out = train_sparse(masked_model, net_input_list, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device_id)

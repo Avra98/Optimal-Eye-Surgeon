@@ -51,7 +51,7 @@ def main(image_name: str, lr: float, max_steps: int,
 
     net_input = get_noise(input_depth, "noise", img_np.shape[1:])
 
-    net = skip_replacement(
+    net = skip(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
@@ -67,6 +67,22 @@ def main(image_name: str, lr: float, max_steps: int,
         pad='reflection',
         act_fun='LeakyReLU'
     )
+    # net = unet(
+    #     input_depth, output_depth,
+    #     num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
+    #     num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
+    #     # num_channels_skip=[0] * num_layers,
+    #     upsample_mode='nearest',
+    #     downsample_mode='avg',
+    #     need1x1_up=False,
+    #     filter_size_down=5,
+    #     filter_size_up=3,
+    #     # filter_skip_size=1,
+    #     need_sigmoid=True,
+    #     need_bias=True,
+    #     pad='reflection',
+    #     act_fun='LeakyReLU'
+    # )
 
     outdir = f'sparse_models/{image_name}'
     os.makedirs(f'{outdir}/out_images/', exist_ok=True)
@@ -158,5 +174,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, device_id=args.device_id,
+         num_layers=args.num_layers, show_every=args.show_every, device=args.device,
          mask_opt=args.mask_opt, kl=args.kl, sparsity=args.sparsity)
