@@ -21,6 +21,7 @@ import argparse
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from utils.inpainting_utils import *
+import yaml
 warnings.filterwarnings("ignore")
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark =True

@@ -11,6 +11,7 @@ from utils.denoising_utils import *
 from models import *
 from utils.quant import *
 from utils.imp import *
+import yaml
 
 warnings.filterwarnings("ignore")
 
@@ -18,7 +19,7 @@ dtype = torch.cuda.FloatTensor
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-def main(max_steps: int, sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device_id: int = 0, 
+def main(lr: float = 1e-2, max_steps: int=40000, sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device_id: int = 0, 
          image_name: str = 'baboon', sparse: float = 0.5, prune_type: str = "rand_global"):
 
     torch.cuda.set_device(device_id)
@@ -111,6 +112,7 @@ def main(max_steps: int, sigma: float = 0.2, num_layers: int = 4, show_every: in
     torch.cuda.empty_cache()
     print("Experiment done")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
@@ -120,20 +122,53 @@ if __name__ == "__main__":
 
     parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show every n steps")
     parser.add_argument("--device_id", type=int, default=1, help="specify which gpu")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
     parser.add_argument("--image_name", type=str, choices=image_choices, default="baboon", help="name of image to denoise")
     parser.add_argument("--sparse", type=float, default=0.5, help="sparse percentage")
     parser.add_argument("--prune_type", type=str, default="rand_global", help="pruning type")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_baseline_pai.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(max_steps=args.max_steps,
-         sigma=args.sigma, num_layers=args.num_layers,
-         show_every=args.show_every, device_id=args.device_id, image_name=args.image_name,
-         sparse=args.sparse, prune_type=args.prune_type)
+    default_config = {
+        'lr': 1e-2,
+        'max_steps': 40000,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 1000,
+        'device_id': 1,
+        'image_name': 'baboon',
+        'sparse': 0.5,
+        'prune_type': 'rand_global'
+    }
+
+    config = {}
+    if args.file:
+        try:
+            with open(args.file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {args.file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(args.file, 'w') as file:
+                yaml.dump(default_config, file)
+            print(f"Default configuration file '{args.file}' has been created.")
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        image_name=config.get('image_name', default_config['image_name']),
+        sparse=config.get('sparse', default_config['sparse']),
+        prune_type=config.get('prune_type', default_config['prune_type'])
+    )
+

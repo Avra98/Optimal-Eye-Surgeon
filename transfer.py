@@ -13,6 +13,7 @@ from utils.denoising_utils import *
 from utils.quant import *
 from utils.imp import *
 from models import *
+import yaml
 
 warnings.filterwarnings("ignore")
 
@@ -105,6 +106,7 @@ def main(sigma: float = 0.1, num_layers: int = 4, show_every: int=1000, device_i
     torch.cuda.empty_cache()
     print("Transfer done")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
@@ -121,10 +123,47 @@ if __name__ == "__main__":
     parser.add_argument("--transferimage_name", type=str, choices=image_choices, default="barbara", help="transfer image from which to transfer")
     parser.add_argument("--trans_type", type=str, default="pai", help="transfer type")
     parser.add_argument("--sparsity", type=float, default=0.05, help="sparsity percent")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_transfer.yaml', help="YAML configuration file, options passed on the command line override these")
     args = parser.parse_args()
 
-    main(max_steps=args.max_steps, sigma=args.sigma, num_layers=args.num_layers, 
-         show_every=args.show_every, device_id=args.device_id, image_name=args.image_name, 
-         transferimage_name=args.transferimage_name, trans_type=args.trans_type, sparsity=args.sparsity)
+    default_config = {
+        'max_steps': 40000,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 1000,
+        'device_id': 0,
+        'image_name': 'baboon',
+        'transferimage_name': 'barbara',
+        'trans_type': 'pai',
+        'sparsity': 0.05
+    }
+
+    config = {}
+    if args.file:
+        try:
+            with open(args.file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {args.file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(args.file, 'w') as file:
+                yaml.dump(default_config, file)
+            print(f"Default configuration file '{args.file}' has been created.")
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        image_name=config.get('image_name', default_config['image_name']),
+        transferimage_name=config.get('transferimage_name', default_config['transferimage_name']),
+        trans_type=config.get('trans_type', default_config['trans_type']),
+        sparsity=config.get('sparsity', default_config['sparsity'])
+    )
+
 
 

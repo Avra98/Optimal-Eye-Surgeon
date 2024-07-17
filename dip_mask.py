@@ -138,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_opt", type=str, help="mask type")
     parser.add_argument("--kl", type=float, help="regularization strength of kl")
     parser.add_argument("--sparsity", type=float, help="fraction to keep")
-    parser.add_argument("-f", "--file", type=str, default='config_mask.yaml', help="YAML configuration file, options passed on the command line override these")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_mask.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 

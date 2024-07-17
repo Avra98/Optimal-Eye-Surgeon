@@ -115,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_layers", type=int, help="number of layers")
     parser.add_argument("--show_every", type=int, help="show every N steps")
     parser.add_argument("--device_id", type=int, help="specify which GPU")
-    parser.add_argument("-f", "--file", type=str, default='config_train_sparse.yaml', help="YAML configuration file, options passed on the command line override these")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_train_sparse.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
