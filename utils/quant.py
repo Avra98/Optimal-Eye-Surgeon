@@ -53,16 +53,6 @@ def soft_quantize(logits, q, temperature=0.2):
     quantized_output = torch.sum(soft_samples * quant_values, dim=-1)
     return quantized_output
 
-def structured_init(model, q=3):
-    device = next(model.parameters()).device
-
-    w0, num_params = [], 0
-    for layer, param in enumerate(model.parameters()):
-        w0.append(param.data.view(-1).detach().clone())
-    w0 = torch.cat(w0)
-    p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
-    return w0, p
-
 def quant_initialization(model, q=3):
     device = next(model.parameters()).device
 
@@ -73,7 +63,7 @@ def quant_initialization(model, q=3):
     p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
     return w0, p
 
-def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
+def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
     """Learns quantization probabilities using a deep inverse prior (DIP) approach.
 
     This function trains a model to learn quantization probabilities (p) for a specific sparsity level.
@@ -128,8 +118,7 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
         for i, param in enumerate(model_copy.parameters()):
             t = len(param.view(-1))
             logits = p[:, k:(k+t)].t()
-            quantized_weights = soft_quantize (
-                torch.sigmoid(logits), q, temperature=0.2)
+            quantized_weights = soft_quantize(torch.sigmoid(logits), q, temperature=0.2)
             param.mul_(quantized_weights.view(param.data.shape))
             k += t
 
@@ -156,87 +145,7 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
             logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
             all_logits.extend(logits_flat)
 
-    os.makedirs(f'histogram_centeredl1_{ino}', exist_ok=True)
-
-    # Plot a histogram for all the quantized weights
-    plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
-    plt.title(f'Distribution of p for sparsity level {sparsity}')
-    plt.xlabel('Value of p')
-    plt.ylabel('Frequency')
-    plt.savefig(f'histogram_centeredl1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
-    plt.clf()
-
-    return p, quant_loss
-
-def learn_p_structured_pruning(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
-    device = next(model.parameters()).device
-    mse = torch.nn.MSELoss()
-    img_var = np_to_torch(img_var).to(device)
-    noise_var = np_to_torch(noise_var).to(device)
-
-    # Initialize quantization probabilities (p) and make sure they require gradients
-    _, p = structured_init(model, q)
-    p.requires_grad_(True)
-    optimizer_p = torch.optim.Adam([p], lr=lr)
-    # TODO: add learning rate scheduler ?
-    prior = sigmoid(prior_sigma)
-
-    all_logits = []
-    quant_loss = []
-
-    for iteration in range(num_steps):
-
-        # make a copy of the model and freeze the weights
-        model_copy = copy.deepcopy(model)
-        for param in model_copy.parameters():
-            param.requires_grad = False
-
-        # Update quantization probabilities using gradient descent
-        optimizer_p.zero_grad()
-        k = 0
-        for i, param in enumerate(model_copy.parameters()):
-            t = len(param.view(-1))
-            logits = p[:, k:(k+t)].t()
-            quantized_weights = soft_quantize (
-                torch.sigmoid(logits), q, temperature=0.2)
-            param.mul_(quantized_weights.view(param.data.shape))
-            k += t
-
-        # Forward pass after quantization
-        output = model_copy(net_input)
-        # Compute the regularization term based on the KL divergence
-        reg = (torch.sigmoid(p) * torch.log((torch.sigmoid(p)+1e-6)/prior) +
-               (1-torch.sigmoid(p)) * torch.log((1-torch.sigmoid(p)+1e-6)/(1-prior))).sum()
-
-        # Compute loss based on the dissimilarity between quantized model output and noisy image
-        quantization_loss = mse(output, noise_var) + kl*reg
-        quantization_loss.backward()
-        optimizer_p.step()
-
-        # Update quantization probabilities using gradient descent
-        with torch.no_grad():
-            if iteration % show_every == 0:
-                print("iteration: ", iteration, "quantization_loss: ",
-                      quantization_loss.item())
-                quant_loss.append(quantization_loss.item())
-                print("p mean is:", p.mean())
-
-        if iteration == num_steps - 1:
-            logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
-            all_logits.extend(logits_flat)
-
-    os.makedirs(f'histogram_centeredl1_{ino}', exist_ok=True)
-
-    # Plot a histogram for all the quantized weights
-    plt.hist(all_logits, bins=50, alpha=0.5, label='All Layers')
-    plt.title(f'Distribution of p for sparsity level {sparsity}')
-    plt.xlabel('Value of p')
-    plt.ylabel('Frequency')
-    plt.savefig(f'histogram_centeredl1_{ino}/all_layers_histogram_q_{ino}_{sparsity}_{kl}.png')
-    plt.clf()
-
-    return p, quant_loss
-
+    return p, quant_loss, all_logits
 
 def draw_one_mask(logits, model, net_input):
     k = 0
@@ -275,6 +184,68 @@ def deterministic_rounding(model, net_input):
     output = model(net_input)
     return output
 
+def make_mask_structured(net, p_net, imp=None, sparsity=0.05):
+    """Creates a mask for enforcing sparsity in the convolution filters based on global structured pruning.
+
+    This function evaluates the importance of each filter in the model and generates a binary mask to (approximately) enforce a desired sparsity level.
+    Elements in the logits tensor with values exceeding a threshold are set to 1 (active),
+    and the remaining elements are set to 0 (inactive).
+
+    Args:
+        net (nn.Module): The network to mask.
+        p_net (nn.Module): The network with the quantization probabilities as weights.
+        imp : A function that takes in a filter and evaluates its importance normalized by the size of the filter.
+              If None, defaults to L1 norm.
+        sparsity (float, optional): The target sparsity level (percentage of elements to keep active). Defaults to 0.05 (5%).
+    
+    Returns:
+        torch.Tensor: The generated sparse mask (flattened) for all weights in the network.
+    """
+    if imp is None:
+        # Default importance function: L1 norm
+        def imp(filter):
+            return torch.norm(filter, p=1) / filter.numel()
+    
+    # Store importance scores of all filters
+    importance_scores = []
+    filters = []
+    
+    # Collect importance scores for each filter in Conv2d layers of p_net
+    for layer in p_net.modules():
+        if isinstance(layer, nn.Conv2d):
+            layer_weight = layer.weight.data
+            for i in range(layer_weight.size(0)):  # Iterate over filters
+                filter = layer_weight[i]
+                importance_scores.append(imp(filter))
+                filters.append(filter)
+    
+    importance_scores = torch.tensor(importance_scores)
+    
+    # Determine the threshold for sparsity
+    k = int((1 - sparsity) * len(importance_scores))
+    if k < len(importance_scores):
+        threshold = torch.topk(importance_scores, k, largest=True, sorted=True).values[-1]
+    else:
+        threshold = importance_scores.min()
+    
+    # Generate a flat mask for all weights in net based on importance scores from p_net
+    flat_mask = []
+    layer_idx = 0
+    for layer in net.modules():
+        if isinstance(layer, nn.Conv2d):
+            mask = torch.ones(layer.weight.shape, device=layer.weight.device)
+            for i in range(layer.weight.size(0)):  # Iterate over filters
+                if importance_scores[layer_idx] < threshold:
+                    mask[i] = 0.0
+                layer_idx += 1
+            flat_mask.append(mask.flatten())
+        else:
+            flat_mask.append(torch.ones(layer.weight.numel(), device=layer.weight.device))
+    
+    # Concatenate all masks into a single flat tensor
+    flat_mask = torch.cat(flat_mask)
+    
+    return flat_mask
 
 def make_mask_with_sparsity(logits, sparsity=0.05):
     """Creates a mask for enforcing sparsity based on a thresholding strategy.

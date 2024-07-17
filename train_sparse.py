@@ -35,17 +35,17 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     input_depth = 32
     output_depth = 3
 
-    masked_model = unet(
+    masked_model = skip(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
-        # num_channels_skip=[0] * num_layers,
+        num_channels_skip=[0] * num_layers,
         upsample_mode='nearest',
         downsample_mode='avg',
         need1x1_up=False,
         filter_size_down=5,
         filter_size_up=3,
-        # filter_skip_size=1,
+        filter_skip_size=1,
         need_sigmoid=True,
         need_bias=True,
         pad='reflection',
@@ -59,11 +59,18 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     print(f"All results will be saved in: {outdir}/out_sparsenet/{sigma}")
 
     with open(f'{outdir}/masked_model_{image_name}.pkl', 'rb') as f:
-        masked_model = cPickle.poad(f)
+        masked_model = cPickle.load(f)
     with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
     with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
+    
+    # print out all the module names that are actually modules, not containers
+    for name, module in masked_model.named_modules():
+        if len(list(module.children())) == 0:
+            print(module)
+
+    exit()
 
     print(masked_model.parameters())
     exit()

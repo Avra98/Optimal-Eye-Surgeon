@@ -94,7 +94,7 @@ def main(image_name: str, lr: float, max_steps: int,
     ### === OES ===
 
     # Learn quantization probability, p, corresponding to each parameter
-    p, quant_loss = learn_quantization_probabilities_dip(
+    p, quant_loss, p_sig = learn_quantization_probabilities_dip(
         net, net_input, img_np, img_noisy_np, max_steps, lr, image_name, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
 
@@ -143,7 +143,15 @@ def main(image_name: str, lr: float, max_steps: int,
         plt.xlabel('Epochs')
         plt.ylabel('Quantization Loss')
         plt.grid(True)
-        plt.savefig(f'{outdir}/out_images/qquant_loss_{image_name}.png')
+        plt.savefig(f'{outdir}/out_images/quant_loss_{image_name}.png')
+        
+    # Plot a histogram for all the quantized weights
+    plt.hist(p_sig, bins=50, alpha=0.5, label='All Layers')
+    plt.title(f'Distribution of p for sparsity level {sparsity}')
+    plt.xlabel('Value of p')
+    plt.ylabel('Frequency')
+    plt.savefig(f'sparse_models/{image_name}/histograms/all_layers_histogram_q_{sparsity}_{kl}.png')
+    plt.clf()
 
     torch.cuda.empty_cache()
     print("Experiment done")
