@@ -120,6 +120,7 @@ def main(image_name: str, lr: float, max_steps: int,
 
     torch.cuda.empty_cache()
     print("Experiment done")
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")

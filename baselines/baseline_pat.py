@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
     parser.add_argument("--max_steps", type=int, default=100000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
+    parser.add_argument("--reg", type=float, default=0.05, help="regularization strength of igr")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=200, help="show every n steps")
@@ -115,10 +115,53 @@ if __name__ == "__main__":
     parser.add_argument("--prune_iters", type=int, default=14, help="number of pruning iterations")
     parser.add_argument("--percent", type=float, default=0.2, help="percentage of pruning")
     parser.add_argument("--num_epoch", type=int, default=40000, help="number of iterations for each pruning iteration")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_train_sparse.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
-         image_name=args.image_name, weight_decay=args.decay, prune_iters=args.prune_iters,
-         percent=args.percent, num_epoch=args.num_epoch)
+    default_config = {
+        'lr': 1e-2,
+        'max_steps': 100000,
+        'reg': 0.05,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 200,
+        'device_id': 0,
+        'beta': 0,
+        'decay': 0,
+        'image_name': 'pepper',
+        'prune_iters': 14,
+        'percent': 0.2,
+        'num_epoch': 40000
+    }
+
+    config = {}
+    if args.file:
+        try:
+            with open(args.file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {args.file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(args.file, 'w') as file:
+                yaml.dump(default_config, file)
+            print(f"Default configuration file '{args.file}' has been created.")
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        reg=config.get('reg', default_config['reg']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        beta=config.get('beta', default_config['beta']),
+        device_id=config.get('device_id', default_config['device_id']),
+        image_name=config.get('image_name', default_config['image_name']),
+        weight_decay=config.get('decay', default_config['decay']),
+        prune_iters=config.get('prune_iters', default_config['prune_iters']),
+        percent=config.get('percent', default_config['percent']),
+        num_epoch=config.get('num_epoch', default_config['num_epoch'])
+    )

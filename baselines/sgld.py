@@ -12,7 +12,7 @@ from utils.denoising_utils import *
 from models import *
 from utils.quant import *
 from utils.imp import *
-
+import yaml
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
@@ -155,9 +155,47 @@ if __name__ == "__main__":
     parser.add_argument("--beta", type=float, default=0,
                         help="momentum for SGD")
     parser.add_argument("--decay", type=float, default=0, help="weight decay")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_sgld.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
-         weight_decay=args.decay)
+    default_config = {
+        'image_name': 'pepper',
+        'lr': 1e-2,
+        'max_steps': 40000,
+        'reg': 0.05,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 1000,
+        'device_id': 1,
+        'beta': 0,
+        'decay': 0
+    }
+
+    config = {}
+    if args.file:
+        try:
+            with open(args.file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {args.file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(args.file, 'w') as file:
+                yaml.dump(default_config, file)
+            print(f"Default configuration file '{args.file}' has been created.")
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        image_name=config.get('image_name', default_config['image_name']),
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        reg=config.get('reg', default_config['reg']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        beta=config.get('beta', default_config['beta']),
+        weight_decay=config.get('decay', default_config['decay'])
+    )
