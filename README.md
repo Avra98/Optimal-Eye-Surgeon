@@ -17,6 +17,7 @@ Repository structure:
 │  ├─ vanilla_decoder.py
 │  └─ vanilla_dip.py
 ├─ images
+|-configs
 ├─ sparse_models
 │  ├─ baboon
 │  ├─ barbara
@@ -29,7 +30,7 @@ Repository structure:
 │  └─ pepper
 ├─ src
 │  ├─ models
-│  └─ utils
+│  └─ utils 
 ├─ dip_mask.py
 ├─ train_sparse.py
 └─ transfer.py
