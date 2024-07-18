@@ -61,7 +61,7 @@ Repository structure:
 
 
 ##  Setup
-Install conda, create and activate environemnt and install required packages
+Install conda, create and activate environment and install required packages
 
 ```bash
 conda create --name oes python==3.7.16
@@ -169,4 +169,17 @@ Chose among the following options for prune_type:
 python baselines/baseline_pat.py --image_name="pepper" --prune_iters=14 --percent=0.2
 ```
 The above line runs IMP for 14 iterations with 20% deletion of weights at each iteration. Resulting in 5% sparsity. (drastic pruning degrades performance)
+
+
+### Citation
+
+If you use this code, please cite our work:
+
+```bibtex
+@inproceedings{ghosh2024optimal,
+  title={Optimal Eye Surgeon: Finding image priors through sparse generators at initialization},
+  author={Ghosh, Avrajit and Zhang, Xitong and Sun, Kenneth K and Qu, Qing and Ravishankar, Saiprasad and Wang, Rongrong},
+  booktitle={Forty-first International Conference on Machine Learning},
+  year={2024}
+}
 
