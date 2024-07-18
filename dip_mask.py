@@ -95,14 +95,17 @@ def main(image_name: str, lr: float, max_steps: int,
 
     # Learn quantization probability, p, corresponding to each parameter
     p, quant_loss, p_sig = learn_quantization_probabilities_dip(
-        net, net_input, img_np, img_noisy_np, max_steps, lr, image_name, q=2, 
+        net, net_input, img_np, img_noisy_np, num_steps=max_steps, lr=lr, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
 
+    with open(f'{outdir}/net_orig_{image_name}.pkl', 'wb') as f:
+        cPickle.dump(net, f)
+
     mask = make_mask_with_sparsity(p, sparsity)
-    masked_model = mask_network(mask, net)
+    mask_network(mask, net)
 
     with open(f'{outdir}/masked_model_{image_name}.pkl', 'wb') as f:
-        cPickle.dump(masked_model, f)
+        cPickle.dump(net, f)
     with open(f'{outdir}/net_input_list_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net_input, f)
     with open(f'{outdir}/mask_{image_name}.pkl', 'wb') as f:
@@ -116,7 +119,8 @@ def main(image_name: str, lr: float, max_steps: int,
         elif mask_opt == 'multiple':
             out = draw_multiple_masks(p, net, net_input)
         else:
-            out = deterministic_rounding(net, net_input)
+            out = net(net_input)
+            # out = deterministic_rounding(net, net_input)
 
         out_np = torch_to_np(out)
         img_var = np_to_torch(img_np)

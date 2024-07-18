@@ -5,9 +5,10 @@ import warnings
 import numpy as np
 import torch
 import torch.optim
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import argparse
 import pickle as cPickle
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from utils.denoising_utils import *
 from models import *
 from utils.quant import *
@@ -35,7 +36,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     input_depth = 32
     output_depth = 3
 
-    masked_model = skip(
+    net_orig = skip(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
@@ -58,25 +59,28 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     print(f"Starting sparse network training with mask with sparsity level '{sparsity}' on image '{image_name}' with sigma={sigma}.")
     print(f"All results will be saved in: {outdir}/out_sparsenet/{sigma}")
 
-    with open(f'{outdir}/masked_model_{image_name}.pkl', 'rb') as f:
-        masked_model = cPickle.load(f)
+    with open(f'{outdir}/net_orig_{image_name}.pkl', 'rb') as f:
+        net_orig = cPickle.load(f)
     with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
     with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
+    with open(f'{outdir}/p_{image_name}.pkl', 'rb') as f:
+        p = cPickle.load(f)
     
     # print out all the module names that are actually modules, not containers
-    for name, module in masked_model.named_modules():
+    for name, module in net_orig.named_modules():
         if len(list(module.children())) == 0:
             print(module)
 
+    p_net = copy.deepcopy(net_orig)
+    vector_to_parameters(p, p_net.parameters())
+
+    structured_mask = make_mask_structured(net_orig, p_net)
+    net_orig = mask_network(structured_mask, net_orig)
     exit()
 
-    print(masked_model.parameters())
-    exit()
-    # masked_model = mask_network(mask, masked_model)
-
-    psnr, out = train_sparse(masked_model, net_input_list, mask, img_np, img_noisy_np,
+    psnr, out = train_sparse(net_orig, net_input_list, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device_id)
 
     with torch.no_grad():

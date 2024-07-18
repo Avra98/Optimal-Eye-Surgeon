@@ -180,7 +180,6 @@ def draw_multiple_masks(logits, model, net_input, num_masks=10):
 
 
 def deterministic_rounding(model, net_input):
-    print_nonzeros(model)
     output = model(net_input)
     return output
 
@@ -309,7 +308,7 @@ def mask_network(mask, model):
         param.data = param.data * mask[k:(k + t)].view(param.data.shape)
         k += t
 
-    return model
+    return
 
 
 def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rate=0.01, max_step=40000, show_every=200, lr_step=100000, lr_gamma=0.1, device=None):
@@ -362,7 +361,9 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
 
         total_loss.backward()
 
-        # Adjust gradients according to the mask
+        # Zero gradients for the masked parameters
+        # TODO: I think this can be done more efficiently with perhaps
+        # disabling gradients for the masked parameters 
         k = 0
         for param in masked_model.parameters():
             t = len(param.view(-1))
