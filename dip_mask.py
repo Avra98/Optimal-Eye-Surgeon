@@ -101,7 +101,7 @@ def main(image_name: str, lr: float, max_steps: int,
     with open(f'{outdir}/net_orig_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net, f)
 
-    mask = make_mask_with_sparsity(p, sparsity)
+    mask = make_mask_structured(p, sparsity)
     mask_network(mask, net)
 
     with open(f'{outdir}/masked_model_{image_name}.pkl', 'wb') as f:

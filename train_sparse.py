@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 import torch
 import torch.optim
+import torch.nn.utils.prune as prune
 import argparse
 import pickle as cPickle
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
@@ -76,7 +77,14 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     p_net = copy.deepcopy(net_orig)
     vector_to_parameters(p, p_net.parameters())
 
+    # handwritten implementation of zeroing
     structured_mask = make_mask_structured(net_orig, p_net)
+
+    ## torch.nn.utils.prune implementation
+    # pruned_p_net = prune.l1_unstructured(p_net, name='weight', amount=sparsity)
+    # structured_mask = parameters_to_vector(pruned_p)
+    # structured_mask[structured_mask != 0] = 1
+
     net_orig = mask_network(structured_mask, net_orig)
     exit()
 

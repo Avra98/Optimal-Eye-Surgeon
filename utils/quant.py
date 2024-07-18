@@ -96,7 +96,7 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
     noise_var = np_to_torch(noise_var).to(device)
 
     # Initialize quantization probabilities (p) and make sure they require gradients
-    _, p = quant_initialization(model, q)
+    w0, p = quant_initialization(model, q)
     p.requires_grad_(True)
     optimizer_p = torch.optim.Adam([p], lr=lr)
     # TODO: add learning rate scheduler ?
@@ -115,6 +115,8 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
         # Update quantization probabilities using gradient descent
         optimizer_p.zero_grad()
         k = 0
+
+        # TOOD: I feel like p can be reshaped and used directly with torch pruning
         for i, param in enumerate(model_copy.parameters()):
             t = len(param.view(-1))
             logits = p[:, k:(k+t)].t()
@@ -246,7 +248,7 @@ def make_mask_structured(net, p_net, imp=None, sparsity=0.05):
     
     return flat_mask
 
-def make_mask_with_sparsity(logits, sparsity=0.05):
+def make_mask_unstructured(logits, sparsity=0.05):
     """Creates a mask for enforcing sparsity based on a thresholding strategy.
 
     This function generates a binary mask from a provided tensor (logits) to enforce a desired sparsity level.
