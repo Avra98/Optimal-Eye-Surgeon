@@ -90,10 +90,10 @@ Working with the code to reproduce results for each finding in the paper:
 
 <img src="paper_figures/equation.png" width="400px">
 
-The following code implements the above optimization using Gumbel softmax reparameterization trick to find sparse network with 5% weights remaning:
+The following code implements the above optimization using Gumbel softmax reparameterization trick to find sparse network with 5% weights remaining with a noisy pepper image:
 
 ```python
-python dip_mask.py --sparsity=0.05
+python dip_mask.py --sparsity=0.05 --image_name="pepper"
 ```
 
 to generate supermasks at various sparsity levels as follows
