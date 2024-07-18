@@ -61,18 +61,11 @@ Repository structure:
 
 
 ##  Setup
-1. Install conda (if not already installed).
-2. Create the environment:
+Install conda, create and activate environemnt and install required packages
+
 ```bash
 conda create --name oes python==3.7.16
-```
-3. Activate environment:
-Conda:
- ```
- conda activate oes
- ```
-4. Install the required packages:
-```bash
+conda activate oes
 pip install -r requirements.txt && pip install -e .
 ```
 
