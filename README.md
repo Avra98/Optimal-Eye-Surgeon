@@ -18,13 +18,6 @@ Repository structure:
 │  └─ vanilla_dip.py
 ├─ images
 ├─ configs
-│  ├─ config_baseline_pai.yaml
-│  ├─ config_baseline_pat.yaml
-│  ├─ config_deepdecoder.yaml
-│  ├─ config_mask.yaml
-│  ├─ config_sgld.yaml
-│  ├─ config_train_sparse.yaml
-│  └─ config_transfer.yaml
 ├─ sparse_models
 │  ├─ baboon
 │  ├─ barbara
