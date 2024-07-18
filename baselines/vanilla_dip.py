@@ -100,27 +100,35 @@ if __name__ == "__main__":
         'pepper', 'lena', 'barbara', 'baboon'
     ]
 
-    parser.add_argument("--lr", type=float, default=1e-3,
-                        help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=40000,
-                        help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05,
-                        help="if regularization strength of igr")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
-    parser.add_argument("--num_layers", type=int,
-                        default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int,
-                        default=100, help="show every n steps")
-    parser.add_argument("--beta", type=float, default=0,
-                        help="momentum for sgd")
-    parser.add_argument("--device_id", type=int, default=1,
-                        help="specify which gpu")
-    parser.add_argument("--image_name", type=str, choices=image_choices,
-                        default="pepper", help="name of image to denoise")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--sigma", type=float, help="noise-level")
+    parser.add_argument("--num_layers", type=int, help="number of layers")
+    parser.add_argument("--show_every", type=int, help="show every n steps")
+    parser.add_argument("--device_id", type=int, help="specify which gpu")
+    parser.add_argument("--image_name", type=str, choices=image_choices, help="name of image to denoise")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_vanilla_dip.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
-         image_name=args.image_name, weight_decay=args.decay)
+    default_config = {
+        'lr': 1e-3,
+        'max_steps': 40000,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 100,
+        'device_id': 0,
+        'image_name': 'pepper'
+    }
+
+    config = set_config(args, default_config)
+
+    main(
+        lr=config['lr'],
+        max_steps=config['max_steps'],
+        sigma=config['sigma'],
+        num_layers=config['num_layers'],
+        show_every=config['show_every'],
+        device_id=config['device_id'],
+        image_name=config['image_name']
+    )

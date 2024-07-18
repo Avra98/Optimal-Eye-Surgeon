@@ -155,20 +155,7 @@ if __name__ == "__main__":
         'sparsity': 0.05
     }
 
-    config = {}
-    if args.file:
-        try:
-            with open(args.file, 'r') as file:
-                config = yaml.safe_load(file)
-        except FileNotFoundError:
-            print(f'Config file {args.file} not found. Using default values.')
-            # Write the default config to the specified config file
-            with open(args.file, 'w') as file:
-                yaml.dump(default_config, file)
-            print(f"Default configuration file '{args.file}' has been created.")
-
-    # Override config with command line arguments if provided
-    config.update({k: v for k, v in vars(args).items() if v is not None})
+    config = set_config(args.file, default_config)
 
     main(
         image_name=config.get('image_name', default_config['image_name']),

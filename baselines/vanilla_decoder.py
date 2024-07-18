@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import yaml
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from torch.autograd import Variable
 import numpy as np
@@ -14,6 +15,7 @@ from utils.denoising_utils import *
 from utils.inpainting_utils import *
 from utils.imp import *
 from utils.quant import *
+from utils.common_utils import set_config
 warnings.filterwarnings("ignore")
 
 # Suppress warnings
@@ -124,25 +126,38 @@ if __name__ == "__main__":
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices,
-                        default='pepper', required=False, help="which image to denoise")
-    parser.add_argument("--lr", type=float, default=1e-2,
-                        help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=40000,
-                        help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05,
-                        help="regularization strength")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
-    parser.add_argument("--show_every", type=int,
-                        default=1000, help="show every N steps")
-    parser.add_argument("--beta", type=float, default=0,
-                        help="momentum for SGD")
-    parser.add_argument("--device_id", type=int, default=1,
-                        help="specify which GPU")
-    parser.add_argument("--k", type=int, default=5, help="number of channels")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
+                        required=False, help="which image to denoise")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--sigma", type=float, help="noise level")
+    parser.add_argument("--show_every", type=int, help="show every N steps")
+    parser.add_argument("--device_id", type=int, help="specify which GPU")
+    parser.add_argument("--k", type=int, help="number of channels")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_vanilla_decoder.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, reg=args.reg, 
-         sigma=args.sigma, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
-         k=args.k, weight_decay=args.decay)
+    default_config = {
+        'image_name': 'pepper',
+        'lr': 0.01,
+        'max_steps': 40000,
+        'sigma': 0.1,
+        'show_every': 1000,
+        'device_id': 0,
+        'k': 5
+    }
+    
+    config = set_config(args.file, default_config)
+
+    # Override config with command line arguments if provided
+    config.update({k: v for k, v in vars(args).items() if v is not None})
+
+    main(
+        image_name=config.get('image_name', default_config['image_name']),
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        sigma=config.get('sigma', default_config['sigma']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        k=config.get('k', default_config['k'])
+    )

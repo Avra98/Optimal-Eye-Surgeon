@@ -102,23 +102,44 @@ if __name__ == "__main__":
         'baboon', 'barbara', 'lena', 'pepper'
     ]
 
-    parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=100000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05, help="if regularization strength of igr")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
-    parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int, default=200, help="show every n steps")
-    parser.add_argument("--device_id", type=int, default=0, help="specify which gpu")
-    parser.add_argument("--beta", type=float, default=0, help="momentum for sgd")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
-    parser.add_argument("--image_name", type=str, choices=image_choices, default="pepper", help="name of image to denoise")
-    parser.add_argument("--prune_iters", type=int, default=14, help="number of pruning iterations")
-    parser.add_argument("--percent", type=float, default=0.2, help="percentage of pruning")
-    parser.add_argument("--num_epoch", type=int, default=40000, help="number of iterations for each pruning iteration")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--sigma", type=float, help="noise-level")
+    parser.add_argument("--num_layers", type=int, help="number of layers")
+    parser.add_argument("--show_every", type=int, help="show every n steps")
+    parser.add_argument("--device_id", type=int, help="specify which gpu")
+    parser.add_argument("--image_name", type=str, choices=image_choices, help="name of image to denoise")
+    parser.add_argument("--prune_iters", type=int, help="number of pruning iterations")
+    parser.add_argument("--percent", type=float, help="percentage of pruning")
+    parser.add_argument("--num_epoch", type=int, help="number of iterations for each pruning iteration")
+    parser.add_argument("-f", "--file", type=str, default='configs/config_baseline_pat.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
 
-    main(lr=args.lr, max_steps=args.max_steps, reg=args.reg, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, beta=args.beta, device_id=args.device_id,
-         image_name=args.image_name, weight_decay=args.decay, prune_iters=args.prune_iters,
-         percent=args.percent, num_epoch=args.num_epoch)
+    default_config = {
+        'lr': 1e-2,
+        'max_steps': 100000,
+        'sigma': 0.1,
+        'num_layers': 6,
+        'show_every': 200,
+        'device_id': 0,
+        'image_name': 'pepper',
+        'prune_iters': 14,
+        'percent': 0.2,
+        'num_epoch': 40000
+    }
+
+    config = set_config(args.file, default_config)
+
+    main(
+        lr=config.get('lr', default_config['lr']),
+        max_steps=config.get('max_steps', default_config['max_steps']),
+        sigma=config.get('sigma', default_config['sigma']),
+        num_layers=config.get('num_layers', default_config['num_layers']),
+        show_every=config.get('show_every', default_config['show_every']),
+        device_id=config.get('device_id', default_config['device_id']),
+        image_name=config.get('image_name', default_config['image_name']),
+        prune_iters=config.get('prune_iters', default_config['prune_iters']),
+        percent=config.get('percent', default_config['percent']),
+        num_epoch=config.get('num_epoch', default_config['num_epoch'])
+    )
