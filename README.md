@@ -173,7 +173,7 @@ The above line runs IMP for 14 iterations with 20% deletion of weights at each i
 
 ### Citation
 
-If you use this code, please cite our work:
+If you use this code, consider citing our work:
 
 ```bibtex
 @inproceedings{ghosh2024optimal,
