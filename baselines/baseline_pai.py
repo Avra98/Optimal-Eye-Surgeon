@@ -120,15 +120,15 @@ if __name__ == "__main__":
         'baboon', 'barbara', 'lena', 'pepper'
     ]
 
-    parser.add_argument("--lr", type=float, default=1e-2, help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise-level")
-    parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int, default=1000, help="show every n steps")
-    parser.add_argument("--device_id", type=int, default=1, help="specify which gpu")
-    parser.add_argument("--image_name", type=str, choices=image_choices, default="baboon", help="name of image to denoise")
-    parser.add_argument("--sparse", type=float, default=0.5, help="sparse percentage")
-    parser.add_argument("--prune_type", type=str, default="rand_global", help="pruning type")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--sigma", type=float, help="noise-level")
+    parser.add_argument("--num_layers", type=int, help="number of layers")
+    parser.add_argument("--show_every", type=int, help="show every n steps")
+    parser.add_argument("--device_id", type=int, help="specify which gpu")
+    parser.add_argument("--image_name", type=str, choices=image_choices, help="name of image to denoise")
+    parser.add_argument("--sparse", type=float, help="sparse percentage")
+    parser.add_argument("--prune_type", type=str, help="pruning type")
     parser.add_argument("-f", "--file", type=str, default='configs/config_baseline_pai.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
@@ -145,20 +145,7 @@ if __name__ == "__main__":
         'prune_type': 'rand_global'
     }
 
-    config = {}
-    if args.file:
-        try:
-            with open(args.file, 'r') as file:
-                config = yaml.safe_load(file)
-        except FileNotFoundError:
-            print(f'Config file {args.file} not found. Using default values.')
-            # Write the default config to the specified config file
-            with open(args.file, 'w') as file:
-                yaml.dump(default_config, file)
-            print(f"Default configuration file '{args.file}' has been created.")
-
-    # Override config with command line arguments if provided
-    config.update({k: v for k, v in vars(args).items() if v is not None})
+    config = set_config(args, default_config)
 
     main(
         lr=config.get('lr', default_config['lr']),

@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import yaml
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from torch.autograd import Variable
 import numpy as np
@@ -14,6 +15,7 @@ from utils.denoising_utils import *
 from utils.inpainting_utils import *
 from utils.imp import *
 from utils.quant import *
+from utils.common_utils import set_config
 warnings.filterwarnings("ignore")
 import yaml
 

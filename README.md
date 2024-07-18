@@ -81,17 +81,15 @@ Working with the code to reproduce results for each finding in the paper:
 
 <img src="paper_figures/equation.png" width="400px">
 
-The following code implements the above optimization using Gumbel softmax reparameterization trick:
+The following code implements the above optimization using Gumbel softmax reparameterization trick to find sparse network with 5% weights remaning:
 
 ```python
-python dip_mask.py --image_name="pepper" --sparsity=0.05
+python dip_mask.py --sparsity=0.05
 ```
 
 to generate supermasks at various sparsity levels as follows
 
 <img src="paper_figures/only2masks.svg" width="500px">
-
-
 
 ### Finding-2: Sparse network training
 
@@ -100,10 +98,28 @@ After obtaining a mask by the above procedure, run the following to train the sp
 <img src="paper_figures/psnr_comb0.svg" width="500px">
 
 ```python
-python train_sparse.py --image_name="pepper"
+python train_sparse.py -f configs/config_train_sparse.yaml
 ```
 
-For comparing with baselines, see [Baseline pruning methods](#finding-4-baseline-pruning-methods).
+For comparing with baselines
+
+Run the following command for dense DIP
+
+```python
+python vanilla_dip.py -f configs/config_vanilla_dip.yaml
+```
+
+Run the following command for deep-decoder
+
+```python
+python vanilla_decoder.py -f configs/config_vanilla_decoder.yaml
+```
+
+and the command for SGLD
+
+```python
+python sgld.py -f configs/config_sgld.yaml
+```
 
 ### Finding-3: Sparse network transfer
 ####  Transfer OES masks

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import yaml
 import sys
 
 import numpy as np
@@ -8,6 +9,21 @@ import PIL
 import numpy as np
 
 import matplotlib.pyplot as plt
+
+def set_config(conf_file, default_config):
+    config = {}
+    if conf_file:
+        try:
+            with open(conf_file, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f'Config file {conf_file} not found. Using default values.')
+            # Write the default config to the specified config file
+            with open(conf_file, 'w') as file:
+                yaml.dump(default_config, file)
+                config = default_config
+            print(f"Default configuration file '{conf_file}' has been created.")
+    return config
 
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''
