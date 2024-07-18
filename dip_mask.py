@@ -154,6 +154,7 @@ def main(image_name: str, lr: float, max_steps: int,
     plt.title(f'Distribution of p for sparsity level {sparsity}')
     plt.xlabel('Value of p')
     plt.ylabel('Frequency')
+    os.makedirs(f'sparse_models/{image_name}/histograms/', exist_ok=True)
     plt.savefig(f'sparse_models/{image_name}/histograms/all_layers_histogram_q_{sparsity}_{kl}.png')
     plt.clf()
 

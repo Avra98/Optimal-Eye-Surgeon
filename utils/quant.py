@@ -1,5 +1,5 @@
 from __future__ import print_function
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity as ssim
 import copy
 import torch
 import torch.nn as nn
@@ -208,6 +208,7 @@ def make_mask_structured(net, p_net, imp=None, sparsity=0.05):
             return torch.norm(filter, p=1) / filter.numel()
     
     # Store importance scores of all filters
+    device = next(net.parameters()).device
     importance_scores = []
     filters = []
     
@@ -234,14 +235,16 @@ def make_mask_structured(net, p_net, imp=None, sparsity=0.05):
     layer_idx = 0
     for layer in net.modules():
         if isinstance(layer, nn.Conv2d):
-            mask = torch.ones(layer.weight.shape, device=layer.weight.device)
+            mask = torch.ones(layer.weight.shape, device=device)
             for i in range(layer.weight.size(0)):  # Iterate over filters
                 if importance_scores[layer_idx] < threshold:
                     mask[i] = 0.0
                 layer_idx += 1
             flat_mask.append(mask.flatten())
-        else:
-            flat_mask.append(torch.ones(layer.weight.numel(), device=layer.weight.device))
+        elif len(list(layer.parameters(recurse=False))) > 0:
+            for param in layer.parameters(recurse=False):
+                flat_mask.append(torch.ones(param.data.numel(), device=device))
+            # flat_mask.append(torch.ones(layer.weight.numel(), device=device))
     
     # Concatenate all masks into a single flat tensor
     flat_mask = torch.cat(flat_mask)

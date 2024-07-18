@@ -8,7 +8,7 @@ import torch.optim
 import torch.nn.utils.prune as prune
 import argparse
 import pickle as cPickle
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity as ssim
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from utils.denoising_utils import *
 from models import *
@@ -70,26 +70,39 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         p = cPickle.load(f)
     
     # print out all the module names that are actually modules, not containers
-    for name, module in net_orig.named_modules():
-        if len(list(module.children())) == 0:
-            print(module)
+    # for name, module in net_orig.named_modules():
+    #     if len(list(module.children())) == 0:
+    #         print(module)
 
     p_net = copy.deepcopy(net_orig)
-    vector_to_parameters(p, p_net.parameters())
+    print(p.shape)
+    vector_to_parameters(p[0], p_net.parameters())
+
+    # for param in p_net.parameters():
+    #     param = 
+    #     w0.append(param.data.view(-1).detach().clone())
+    # w0 = torch.cat(w0)
+    # p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
+    # return w0, pk
 
     # handwritten implementation of zeroing
-    structured_mask = make_mask_structured(net_orig, p_net)
+    # structured_mask = make_mask_structured(net_orig, p_net)
 
     ## torch.nn.utils.prune implementation
-    # pruned_p_net = prune.l1_unstructured(p_net, name='weight', amount=sparsity)
-    # structured_mask = parameters_to_vector(pruned_p)
-    # structured_mask[structured_mask != 0] = 1
+    for module in p_net.modules():
+        if isinstance(module, torch.nn.Conv2d):
+            prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
 
-    net_orig = mask_network(structured_mask, net_orig)
-    exit()
+    # print(dict(p_net.named_buffers()).keys())
+    structured_mask = parameters_to_vector(p_net.parameters())
+    structured_mask[structured_mask != 0] = 1
+    print('structured mask shape: ', structured_mask.shape)
+    print('unstructured mask shape: ', mask.shape)
+
+    mask_network(structured_mask, net_orig)
 
     psnr, out = train_sparse(net_orig, net_input_list, mask, img_np, img_noisy_np,
-                             max_step=max_steps, show_every=show_every, device=device_id)
+                             max_step=max_steps, show_every=show_every, device=device)
 
     with torch.no_grad():
         out_np = out
@@ -97,6 +110,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         img_np = img_var.detach().cpu().numpy()
         psnr_gt = compare_psnr(img_np, out_np)
         print("PSNR of output image is: ", psnr_gt)
+        print("SSIM of output image is: ", ssim(img_np, out_np))
         np.savez(f'{outdir}/out_sparsenet/{sigma}/psnr_{ino}.npz', psnr=psnr)
 
         output_paths = [
@@ -126,7 +140,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'lenna', 'pepper'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', help="which image to denoise")
