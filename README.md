@@ -1,4 +1,4 @@
-## Optimal Eye Surgeon ([ICML-2024](https://arxiv.org/abs/2406.05288))
+# Optimal Eye Surgeon ([ICML-2024](https://arxiv.org/abs/2406.05288))
 
 <div style="display: flex; justify-content: space-around;">
     <img src="paper_figures/flow.svg" alt="Flow Diagram" style="width: 45%;"/>
