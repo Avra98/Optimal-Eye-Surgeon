@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'lenna', 'pepper'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, help="which image to denoise")

@@ -138,24 +138,16 @@ if __name__ == "__main__":
         'baboon', 'barbara', 'lena', 'pepper'
     ]
 
-    parser.add_argument("--image_name", type=str, choices=image_choices,
-                        default='pepper', required=False, help="which image to denoise")
-    parser.add_argument("--lr", type=float, default=1e-2,
-                        help="the learning rate")
-    parser.add_argument("--max_steps", type=int, default=40000,
-                        help="the maximum number of gradient steps to train for")
-    parser.add_argument("--reg", type=float, default=0.05,
-                        help="regularization strength")
-    parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
-    parser.add_argument("--num_layers", type=int,
-                        default=6, help="number of layers")
-    parser.add_argument("--show_every", type=int,
-                        default=1000, help="show every N steps")
-    parser.add_argument("--device_id", type=int, default=1,
-                        help="specify which GPU")
-    parser.add_argument("--beta", type=float, default=0,
-                        help="momentum for SGD")
-    parser.add_argument("--decay", type=float, default=0, help="weight decay")
+    parser.add_argument("--image_name", type=str, choices=image_choices, required=False, help="which image to denoise")
+    parser.add_argument("--lr", type=float, help="the learning rate")
+    parser.add_argument("--max_steps", type=int, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--reg", type=float, help="regularization strength")
+    parser.add_argument("--sigma", type=float, help="noise level")
+    parser.add_argument("--num_layers", type=int, help="number of layers")
+    parser.add_argument("--show_every", type=int, help="show every N steps")
+    parser.add_argument("--device_id", type=int, help="specify which GPU")
+    parser.add_argument("--beta", type=float, help="momentum for SGD")
+    parser.add_argument("--decay", type=float, help="weight decay")
     parser.add_argument("-f", "--file", type=str, default='configs/config_sgld.yaml', help="YAML configuration file, options passed on the command line override these")
 
     args = parser.parse_args()
