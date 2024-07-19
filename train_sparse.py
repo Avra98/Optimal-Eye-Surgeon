@@ -36,6 +36,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         LOG_NAME='sparse', 
         LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
 
+    device = f'cuda:{device}' if device.isdigit() else device
     torch.set_default_device(device)
     torch.get_default_device()
 
@@ -97,7 +98,10 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     logger.debug('Using prune.ln_structured')
     for module in p_net.modules():
         if isinstance(module, torch.nn.Conv2d):
+            before = module.weight.numel()
             prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
+            after = module.weight.numel()
+            logger.debug('Pruned %s from %s', before-after, module)
 
     # print(dict(p_net.named_buffers()).keys())
     structured_mask = parameters_to_vector(p_net.parameters())

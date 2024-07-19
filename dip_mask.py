@@ -26,11 +26,20 @@ torch.backends.cudnn.benchmark = True
 def main(image_name: str, lr: float, max_steps: int,
          sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0',
          mask_opt: str = "det", kl: float = 1e-9, sparsity: float = 0.05):
-    device = f'cuda{device}' if device.isdigit() else device
+
+    basedir = f'sparse_models/{image_name}'
+    outdir = f'{basedir}/out_mask/{sigma}'
+    os.makedirs(outdir, exist_ok=True)
+    logger = get_logger(
+        LOG_FORMAT='%(asctime)s %(levelname)-8s %(message)s', 
+        LOG_NAME='sparse', 
+        LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
+
+    device = f'cuda:{device}' if device.isdigit() else device
     torch.set_default_device(device)
     torch.set_default_dtype(torch.float32)
 
-    print(
+    logger.info(
         f'DEVICE: {device}\n'
         f'LR: {lr}\n'
         f'OPTIM: ADAM\n'
@@ -84,12 +93,8 @@ def main(image_name: str, lr: float, max_steps: int,
     #     act_fun='LeakyReLU'
     # )
 
-    outdir = f'sparse_models/{image_name}'
-    os.makedirs(f'{outdir}/out_images/', exist_ok=True)
-
-    print(f"Now mask with sparsity level '{sparsity}' is starting to get learned on image '{image_name}' with sigma={sigma}.")
-    print(f"The noisy PSNR is '{noisy_psnr}'.")
-    print(f"All results will be saved in: {outdir}")
+    logger.info(f"Now mask with sparsity level '{sparsity}' is starting to get learned on image '{image_name}' with sigma={sigma}.")
+    logger.info(f"The noisy PSNR is '{noisy_psnr}'.")
 
     ### === OES ===
 
@@ -98,19 +103,20 @@ def main(image_name: str, lr: float, max_steps: int,
         net, net_input, img_np, img_noisy_np, num_steps=max_steps, lr=lr, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
 
-    with open(f'{outdir}/net_orig_{image_name}.pkl', 'wb') as f:
+    with open(f'{basedir}/net_orig_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net, f)
 
-    mask = make_mask_structured(p, sparsity)
+    logger.info("Using make mask unstructured")
+    mask = make_mask_unstructured(p, sparsity)
     mask_network(mask, net)
 
-    with open(f'{outdir}/masked_model_{image_name}.pkl', 'wb') as f:
+    with open(f'{basedir}/masked_model_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net, f)
-    with open(f'{outdir}/net_input_list_{image_name}.pkl', 'wb') as f:
+    with open(f'{basedir}/net_input_list_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net_input, f)
-    with open(f'{outdir}/mask_{image_name}.pkl', 'wb') as f:
+    with open(f'{basedir}/mask_{image_name}.pkl', 'wb') as f:
         cPickle.dump(mask, f)
-    with open(f'{outdir}/p_{image_name}.pkl', 'wb') as f:
+    with open(f'{basedir}/p_{image_name}.pkl', 'wb') as f:
         cPickle.dump(p, f)
 
     with torch.no_grad():
@@ -127,12 +133,12 @@ def main(image_name: str, lr: float, max_steps: int,
         img_np = torch_to_np(img_var)
 
         psnr_gt = compare_psnr(img_np, out_np)
-        print(f"PSNR of output image is: {psnr_gt}")
+        logger.info(f"PSNR of output image is: {psnr_gt}")
 
         output_paths = [
-            f"{outdir}/out_images/out_{image_name}.png",
-            f"{outdir}/out_images/img_np_{image_name}.png",
-            f"{outdir}/out_images/img_noisy_np_{image_name}.png"
+            f"{basedir}/out_images/out_{image_name}.png",
+            f"{basedir}/out_images/img_np_{image_name}.png",
+            f"{basedir}/out_images/img_noisy_np_{image_name}.png"
         ]
 
         images_to_save = [out_np.transpose(1, 2, 0), img_np.transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]
@@ -147,7 +153,7 @@ def main(image_name: str, lr: float, max_steps: int,
         plt.xlabel('Epochs')
         plt.ylabel('Quantization Loss')
         plt.grid(True)
-        plt.savefig(f'{outdir}/out_images/quant_loss_{image_name}.png')
+        plt.savefig(f'{basedir}/out_images/quant_loss_{image_name}.png')
         
     # Plot a histogram for all the quantized weights
     plt.hist(p_sig, bins=50, alpha=0.5, label='All Layers')
@@ -159,13 +165,13 @@ def main(image_name: str, lr: float, max_steps: int,
     plt.clf()
 
     torch.cuda.empty_cache()
-    print("Experiment done")
+    logger.info("Experiment done")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
 
     image_choices = [
-        'baboon', 'barbara', 'lenna', 'pepper'
+        'baboon', 'barbara', 'lena', 'pepper'
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', required=False, help="which image to denoise")

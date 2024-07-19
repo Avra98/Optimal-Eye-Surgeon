@@ -139,10 +139,9 @@ def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, n
         # Update quantization probabilities using gradient descent
         with torch.no_grad():
             if iteration % show_every == 0:
-                print("iteration: ", iteration, "quantization_loss: ",
-                      quantization_loss.item())
+                logger.info("iteration: %s   quantization_loss: %s", iteration, quantization_loss.item())
                 quant_loss.append(quantization_loss.item())
-                print("p mean is:", p.mean())
+                logger.info("p mean is: %s", p.mean())
 
         if iteration == num_steps - 1:
             logits_flat = torch.sigmoid(p).view(-1).cpu().detach().numpy()
