@@ -1,6 +1,7 @@
 from __future__ import print_function
 import matplotlib.pyplot as plt
 import os
+import logging
 import warnings
 import numpy as np
 import torch
@@ -8,7 +9,7 @@ import torch.optim
 import torch.nn.utils.prune as prune
 import argparse
 import pickle as cPickle
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity as ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity 
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from utils.denoising_utils import *
 from models import *
@@ -16,7 +17,7 @@ from utils.quant import *
 from utils.imp import *
 
 # Suppress warnings
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 # Enable CUDA
 torch.backends.cudnn.enabled = True
@@ -27,6 +28,13 @@ dtype = torch.cuda.FloatTensor
 def main(image_name: str, max_steps: int, sigma: float = 0.2,
          num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0', 
          ino: int = 0, sparsity: float = 0.05):
+    basedir = f'sparse_models/{image_name}'
+    outdir = f'{basedir}/out_sparsenet/{sigma}'
+    os.makedirs(outdir, exist_ok=True)
+    logger = get_logger(
+        LOG_FORMAT='%(asctime)s %(levelname)-8s %(message)s', 
+        LOG_NAME='sparse', 
+        LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
 
     torch.set_default_device(device)
     torch.get_default_device()
@@ -54,19 +62,16 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         act_fun='LeakyReLU'
     )
 
-    outdir = f'sparse_models/{image_name}'
-    os.makedirs(f'{outdir}/out_sparsenet/{sigma}', exist_ok=True)
+    logger.info(f"Sparsity '{sparsity}' on image '{image_name}' with sigma={sigma}.")
+    logger.info(f"Outdir: {outdir}")
 
-    print(f"Starting sparse network training with mask with sparsity level '{sparsity}' on image '{image_name}' with sigma={sigma}.")
-    print(f"All results will be saved in: {outdir}/out_sparsenet/{sigma}")
-
-    with open(f'{outdir}/net_orig_{image_name}.pkl', 'rb') as f:
+    with open(f'{basedir}/net_orig_{image_name}.pkl', 'rb') as f:
         net_orig = cPickle.load(f)
-    with open(f'{outdir}/net_input_list_{image_name}.pkl', 'rb') as f:
+    with open(f'{basedir}/net_input_list_{image_name}.pkl', 'rb') as f:
         net_input_list = cPickle.load(f)
-    with open(f'{outdir}/mask_{image_name}.pkl', 'rb') as f:
+    with open(f'{basedir}/mask_{image_name}.pkl', 'rb') as f:
         mask = cPickle.load(f)
-    with open(f'{outdir}/p_{image_name}.pkl', 'rb') as f:
+    with open(f'{basedir}/p_{image_name}.pkl', 'rb') as f:
         p = cPickle.load(f)
     
     # print out all the module names that are actually modules, not containers
@@ -75,7 +80,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     #         print(module)
 
     p_net = copy.deepcopy(net_orig)
-    print(p.shape)
+    logger.debug('P shape: %s', p.shape)
     vector_to_parameters(p[0], p_net.parameters())
 
     # for param in p_net.parameters():
@@ -89,6 +94,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # structured_mask = make_mask_structured(net_orig, p_net)
 
     ## torch.nn.utils.prune implementation
+    logger.debug('Using prune.ln_structured')
     for module in p_net.modules():
         if isinstance(module, torch.nn.Conv2d):
             prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
@@ -96,12 +102,12 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # print(dict(p_net.named_buffers()).keys())
     structured_mask = parameters_to_vector(p_net.parameters())
     structured_mask[structured_mask != 0] = 1
-    print('structured mask shape: ', structured_mask.shape)
-    print('unstructured mask shape: ', mask.shape)
+    logger.debug('structured mask shape: %s', structured_mask.shape)
+    logger.debug('unstructured mask shape: %s', mask.shape)
 
     mask_network(structured_mask, net_orig)
 
-    psnr, out = train_sparse(net_orig, net_input_list, mask, img_np, img_noisy_np,
+    ssim, psnr, out = train_sparse(net_orig, net_input_list, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device)
 
     with torch.no_grad():
@@ -109,14 +115,16 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         img_var = np_to_torch(img_np)
         img_np = img_var.detach().cpu().numpy()
         psnr_gt = compare_psnr(img_np, out_np)
-        print("PSNR of output image is: ", psnr_gt)
-        print("SSIM of output image is: ", ssim(img_np, out_np))
-        np.savez(f'{outdir}/out_sparsenet/{sigma}/psnr_{ino}.npz', psnr=psnr)
+        logger.info("PSNR of output image is: %s", psnr_gt)
+        logger.info("SSIM of output image is: %s", structural_similarity(img_np[0], out_np[0], 
+                                                                 channel_axis=0, data_range=img_np.max() - img_np.min()))
+        np.savez(f'{outdir}/psnr_{ino}.npz', psnr=psnr)
+        np.savez(f'{outdir}/ssim_{ino}.npz', ssim=ssim)
 
         output_paths = [
-            f"{outdir}/out_sparsenet/{sigma}/out_{image_name}.png",
-            f"{outdir}/out_sparsenet/{sigma}/img_np_{image_name}.png",
-            f"{outdir}/out_sparsenet/{sigma}/img_noisy_np_{image_name}.png"
+            f"{outdir}/out_{image_name}.png",
+            f"{outdir}/img_np_{image_name}.png",
+            f"{outdir}/img_noisy_np_{image_name}.png"
         ]
 
         images_to_save = [out_np[0, :, :, :].transpose(1, 2, 0), img_np[0, :, :, :].transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]
@@ -130,11 +138,18 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         plt.title('PSNR vs Iterations')
         plt.xlabel('Iterations')
         plt.ylabel('PSNR')
-        plt.savefig(f'{outdir}/out_sparsenet/{sigma}/psnr_{ino}.png')
+        plt.savefig(f'{outdir}/psnr_{ino}.png')
+        plt.close()
+
+        plt.plot(ssim)
+        plt.title('SSIM vs Iterations')
+        plt.xlabel('Iterations')
+        plt.ylabel('SSIM')
+        plt.savefig(f'{outdir}/ssim_{ino}.png')
         plt.close()
 
     torch.cuda.empty_cache()
-    print("Experiment done")
+    logger.info("Experiment done")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")

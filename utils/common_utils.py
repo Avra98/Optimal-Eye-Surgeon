@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import logging
 import sys
 
 import numpy as np
@@ -8,6 +9,35 @@ import PIL
 import numpy as np
 
 import matplotlib.pyplot as plt
+
+def get_logger(    
+        LOG_FORMAT     = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        LOG_NAME       = '',
+        LOG_FILE_INFO  = 'file.log',
+        LOG_FILE_DEBUG = 'file.debug'):
+
+    log           = logging.getLogger(LOG_NAME)
+    log_formatter = logging.Formatter(LOG_FORMAT)
+
+    # comment this to suppress console output
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(log_formatter)
+    stream_handler.setLevel(logging.WARNING)
+    log.addHandler(stream_handler)
+
+    file_handler_info = logging.FileHandler(LOG_FILE_INFO, mode='w')
+    file_handler_info.setFormatter(log_formatter)
+    file_handler_info.setLevel(logging.INFO)
+    log.addHandler(file_handler_info)
+
+    file_handler_debug = logging.FileHandler(LOG_FILE_DEBUG, mode='w')
+    file_handler_debug.setFormatter(log_formatter)
+    file_handler_debug.setLevel(logging.DEBUG)
+    log.addHandler(file_handler_debug)
+
+    log.setLevel(logging.DEBUG)
+
+    return log
 
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''

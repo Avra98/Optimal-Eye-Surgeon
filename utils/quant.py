@@ -1,5 +1,5 @@
 from __future__ import print_function
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity as ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity
 import copy
 import torch
 import torch.nn as nn
@@ -20,6 +20,7 @@ from utils.common_utils import *
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+logger = logging.getLogger('sparse')
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
@@ -350,6 +351,7 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
 
     mse = torch.nn.MSELoss()
     psnr_lists = []
+    ssim_lists = []
     print_nonzeros(masked_model)
     # Define the optimizer
     optimizer = torch.optim.Adam(masked_model.parameters(), lr=learning_rate)
@@ -362,7 +364,7 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
         total_loss = mse(out, noise_var)
         with torch.no_grad():
             if epoch == 0:
-                print("total_loss is:", total_loss)
+                logger.info("total_loss is: %s", total_loss)
 
         total_loss.backward()
 
@@ -382,15 +384,21 @@ def train_sparse(masked_model, net_input, mask, img_var, noise_var, learning_rat
             # Calculating PSNR
             out_np = out.detach().cpu().numpy()
             img_np = img_var.detach().cpu().numpy()
+            noisy_np = noise_var.detach().cpu().numpy()
+            ssim_gt = structural_similarity(img_np[0], out_np[0],
+                                            channel_axis=0, data_range=img_np.max()-img_np.min())
+            ssim_noisy = structural_similarity(noisy_np[0], out_np[0], 
+                                               channel_axis=0, data_range=noisy_np.max()-noisy_np.min())
+            ssim_lists.append(ssim_gt)
             psnr_gt = compare_psnr(img_np, out_np)
-            psnr_noisy = compare_psnr(noise_var.detach().cpu().numpy(), out_np)
+            psnr_noisy = compare_psnr(noisy_np, out_np)
             psnr_lists.append(psnr_gt)
 
             # Print epoch, loss and PSNR
-            print("epoch: ", epoch, "loss: ", total_loss.item(),
-                  "PSNR: ", psnr_gt, "PSNR_noisy: ", psnr_noisy)
+            logger.info("epoch: %s  loss: %s  SSIM: %s  SSIM_noisy %s  PSNR: %s  PSNR_noisy %s", 
+                        epoch, total_loss.item(), ssim_gt, ssim_noisy, psnr_gt, psnr_noisy)
 
-    return psnr_lists, out_np
+    return ssim_lists, psnr_lists, out_np
 
 
 def train_dense(net, net_input,  img_var, noise_var, learning_rate=1e-3, max_step=40000, show_every=1000, lr_step=100000, lr_gamma=0.1, device='cuda:0'):
@@ -490,11 +498,11 @@ def print_nonzeros(model):
         total_params = param.data.numel()
         nonzero += nz_count
         total += total_params
-        print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} \
+        logger.debug(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} \
             ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count:7} | shape = {param.data.shape}')
 
-    print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, \
-          Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
+    logger.info(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, \
+                Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
     return (round((nonzero/total)*100, 1))
 
 
