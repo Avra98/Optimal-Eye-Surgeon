@@ -81,7 +81,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     #         print(module)
 
     p_net = copy.deepcopy(net_orig)
-    logger.debug('P shape: %s', p.shape)
+    logger.debug('p shape: %s', p.shape)
     vector_to_parameters(p[0], p_net.parameters())
 
     # for param in p_net.parameters():
@@ -95,28 +95,25 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # structured_mask = make_mask_structured(net_orig, p_net)
 
     # torch.nn.utils.prune implementation
-    logger.info('Using prune.ln_structured for masking')
-    for module in p_net.modules():
-        if isinstance(module, torch.nn.Conv2d):
-            # logger.debug('Module shape: %s', module.weight.shape)
-            before = torch.sum(module.weight != 0)
-            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
-            prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
-            prune.remove(module, 'weight') #  apply the mask permanently 
-            after = torch.sum(module.weight != 0)
-            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
-            # logger.debug('Module mask values %s', module.weight_mask)
-            logger.debug('Pruned %s weights from %s', (before-after).item(), module)
+    # logger.info('Using prune.ln_structured for masking')
+    # for module in p_net.modules():
+    #     if isinstance(module, torch.nn.Conv2d):
+    #         # logger.debug('Module shape: %s', module.weight.shape)
+    #         before = torch.sum(module.weight != 0)
+    #         # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
+    #         prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
+    #         prune.remove(module, 'weight') #  apply the mask permanently 
+    #         after = torch.sum(module.weight != 0)
+    #         # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
+    #         # logger.debug('Module mask values %s', module.weight_mask)
+    #         logger.debug('Pruned %s weights from %s', (before-after).item(), module)
 
-    mask = parameters_to_vector(p_net.parameters())
-    mask[mask != 0] = 1
+    # mask = parameters_to_vector(p_net.parameters())
+    # mask[mask != 0] = 1
 
     # unstructured masking
-    # logger.info('Using make_mask_unstructured for masking')
-    # mask = make_mask_unstructured(p, sparsity=sparsity)
-
-    logger.debug('structured mask shape: %s', mask.shape)
-    logger.debug('unstructured mask shape: %s', mask.shape)
+    logger.info('Using make_mask_unstructured for masking')
+    mask = make_mask_unstructured(p, sparsity=sparsity)
 
     logger.info('sparsity of mask: %s', torch.sum(mask == 0).item() / mask.size(0))
     mask_network(mask, net_orig)

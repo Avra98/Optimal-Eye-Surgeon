@@ -94,7 +94,7 @@ def main(image_name: str, lr: float, max_steps: int,
     # )
 
     logger.info(f"Now mask with sparsity level '{sparsity}' is starting to get learned on image '{image_name}' with sigma={sigma}.")
-    logger.info(f"The noisy PSNR is '{noisy_psnr}'.")
+    logger.info(f"Noisy PSNR: '{noisy_psnr}', noisy SSIM: '{structural_similarity(img_np[0], img_noisy_np[0], channel_axis=0)}'")
 
     ### === OES ===
 
@@ -134,7 +134,11 @@ def main(image_name: str, lr: float, max_steps: int,
         img_np = torch_to_np(img_var)
 
         psnr_gt = compare_psnr(img_np, out_np)
-        logger.info(f"PSNR of output image is: {psnr_gt}")
+        ssim_gt = structural_similarity(img_np[0], out_np[0],
+                                        channel_axis=0, data_range=out_np.max() - out_np.min())
+        logger.info("PSNR of output image is: %s", psnr_gt)
+        logger.info("SSIM of output image is: %s", ssim_gt)
+
 
         output_paths = [
             f"{outdir}/out_{image_name}.png",
