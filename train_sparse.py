@@ -94,22 +94,32 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # handwritten implementation of zeroing
     # structured_mask = make_mask_structured(net_orig, p_net)
 
-    ## torch.nn.utils.prune implementation
-    logger.debug('Using prune.ln_structured')
+    # torch.nn.utils.prune implementation
+    logger.info('Using prune.ln_structured for masking')
     for module in p_net.modules():
         if isinstance(module, torch.nn.Conv2d):
-            before = module.weight.numel()
+            # logger.debug('Module shape: %s', module.weight.shape)
+            before = torch.sum(module.weight != 0)
+            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
             prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
-            after = module.weight.numel()
-            logger.debug('Pruned %s from %s', before-after, module)
+            prune.remove(module, 'weight') #  apply the mask permanently 
+            after = torch.sum(module.weight != 0)
+            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
+            # logger.debug('Module mask values %s', module.weight_mask)
+            logger.debug('Pruned %s weights from %s', (before-after).item(), module)
 
-    # print(dict(p_net.named_buffers()).keys())
-    structured_mask = parameters_to_vector(p_net.parameters())
-    structured_mask[structured_mask != 0] = 1
-    logger.debug('structured mask shape: %s', structured_mask.shape)
+    mask = parameters_to_vector(p_net.parameters())
+    mask[mask != 0] = 1
+
+    # unstructured masking
+    # logger.info('Using make_mask_unstructured for masking')
+    # mask = make_mask_unstructured(p, sparsity=sparsity)
+
+    logger.debug('structured mask shape: %s', mask.shape)
     logger.debug('unstructured mask shape: %s', mask.shape)
 
-    mask_network(structured_mask, net_orig)
+    logger.info('sparsity of mask: %s', torch.sum(mask == 0).item() / mask.size(0))
+    mask_network(mask, net_orig)
 
     ssim, psnr, out = train_sparse(net_orig, net_input_list, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device)

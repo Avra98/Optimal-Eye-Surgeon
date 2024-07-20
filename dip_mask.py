@@ -47,7 +47,7 @@ def main(image_name: str, lr: float, max_steps: int,
         f'NOISE: {sigma}\n'
         f'KL REG: {kl}\n'
         f'LAYERS: {num_layers}\n'
-        f'...Showing every {show_every} steps for {max_steps} iterations\n...'
+        f'...Showing every {show_every} steps for {max_steps} iterations...'
     )
 
     prior_sigma = inverse_sigmoid(sparsity)
@@ -106,7 +106,7 @@ def main(image_name: str, lr: float, max_steps: int,
     with open(f'{basedir}/net_orig_{image_name}.pkl', 'wb') as f:
         cPickle.dump(net, f)
 
-    logger.info("Using make mask unstructured")
+    logger.info("Using make mask unstructured for output")
     mask = make_mask_unstructured(p, sparsity)
     mask_network(mask, net)
 
@@ -118,6 +118,7 @@ def main(image_name: str, lr: float, max_steps: int,
         cPickle.dump(mask, f)
     with open(f'{basedir}/p_{image_name}.pkl', 'wb') as f:
         cPickle.dump(p, f)
+
 
     with torch.no_grad():
         if mask_opt == 'single':
@@ -136,9 +137,9 @@ def main(image_name: str, lr: float, max_steps: int,
         logger.info(f"PSNR of output image is: {psnr_gt}")
 
         output_paths = [
-            f"{basedir}/out_images/out_{image_name}.png",
-            f"{basedir}/out_images/img_np_{image_name}.png",
-            f"{basedir}/out_images/img_noisy_np_{image_name}.png"
+            f"{outdir}/out_{image_name}.png",
+            f"{outdir}/img_np_{image_name}.png",
+            f"{outdir}/img_noisy_np_{image_name}.png"
         ]
 
         images_to_save = [out_np.transpose(1, 2, 0), img_np.transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]

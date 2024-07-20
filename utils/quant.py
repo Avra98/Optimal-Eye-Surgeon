@@ -267,25 +267,25 @@ def make_mask_unstructured(logits, sparsity=0.05):
     """
     num_elements = logits.numel()
     num_to_keep = int(sparsity * num_elements)
-    print(f"Number of elements to keep: {num_to_keep}")
+    logger.debug(f"Number of elements to keep: {num_to_keep}")
 
     # Get the threshold and top elements
     values, indices = torch.topk(logits.view(-1), num_to_keep, largest=True)
     threshold = values.min()
-    print(f"Threshold value: {threshold}")
+    logger.debug(f"Threshold value: {threshold}")
 
     # Identify elements equal to the threshold
     equal_to_threshold = logits.view(-1) == threshold
     num_equal_elements = equal_to_threshold.sum().item()
-    print(f"Number of elements equal to threshold: {num_equal_elements}")
+    logger.debug(f"Number of elements equal to threshold: {num_equal_elements}")
 
     # Calculate the number of elements to randomly select among equals
     num_to_randomly_select = int(max(
         0, num_to_keep - (values > threshold).sum().item()))
-    print(f"Number of elements to randomly select: {num_to_randomly_select}")
+    logger.debug(f"Number of elements to randomly select: {num_to_randomly_select}")
 
     if num_to_randomly_select and num_equal_elements > num_to_randomly_select:
-        print("Warning: Random selection among elements equal to the threshold is being performed to maintain sparsity.")
+        logger.warning("Warning: Random selection among elements equal to the threshold is being performed to maintain sparsity.")
         equal_indices = torch.where(equal_to_threshold)[0].tolist()
         selected_indices = random.sample(equal_indices, num_to_randomly_select)
         equal_to_threshold[:] = 0  # Reset all equal elements to zero
@@ -297,7 +297,7 @@ def make_mask_unstructured(logits, sparsity=0.05):
     # hard_quant = torch.round(sparse_mask_prob)
 
     actual_sparsity = (sparse_mask == 1).float().sum().item() / num_elements
-    print(f"Actual sparsity achieved: {actual_sparsity}")
+    logger.info(f"Actual sparsity achieved: {actual_sparsity}")
 
     return sparse_mask
 
