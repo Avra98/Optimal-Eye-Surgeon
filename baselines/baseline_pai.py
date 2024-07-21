@@ -95,7 +95,7 @@ def main(lr: float = 1e-2, max_steps: int=40000, sigma: float = 0.2, num_layers:
         ]
 
         print(out_np.shape, img_np.shape, img_noisy_np.shape)
-        images_to_save = [out_np.transpose(1, 2, 0), img_np[0, :, :, :].transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]
+        images_to_save = [out_np[0].transpose(1, 2, 0), img_np[0, :, :, :].transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]
         for path, img in zip(output_paths, images_to_save):
             plt.imshow(img)
             plt.axis('off')

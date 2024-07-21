@@ -76,7 +76,7 @@ def main(image_name: str, lr: float, max_steps: int, reg: float = 0.0, sigma: fl
         psnr_gt = compare_psnr(img_np, out_np)
         return psnr_gt, out_np
 
-    outdir = f'data/denoising/Dataset/mask/{image_name}/deepdecoder_{k}/{sigma}'
+    outdir = f'images/{image_name}/vanilla_decoder/{sigma}'
     os.makedirs(f'{outdir}', exist_ok=True)
 
     for j in range(max_steps):
