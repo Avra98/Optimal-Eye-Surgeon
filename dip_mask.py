@@ -54,47 +54,31 @@ def main(image_name: str, lr: float, max_steps: int,
 
     train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
+    noisy_ssim = structural_similarity(img_np[0], img_noisy_np[0], 
+                                       channel_axis=0, data_range=img_noisy_np.max() - img_noisy_np.min())
 
     input_depth = 32
     output_depth = 3
 
     net_input = get_noise(input_depth, "noise", img_np.shape[1:])
 
-    net = skip(
+    net = UNetCustom(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
-        num_channels_skip=[0] * num_layers,
         upsample_mode='nearest',
         downsample_mode='avg',
         need1x1_up=False,
         filter_size_down=5,
         filter_size_up=3,
-        filter_skip_size=1,
         need_sigmoid=True,
         need_bias=True,
         pad='reflection',
         act_fun='LeakyReLU'
     )
-    # net = unet(
-    #     input_depth, output_depth,
-    #     num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
-    #     num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
-    #     # num_channels_skip=[0] * num_layers,
-    #     upsample_mode='nearest',
-    #     downsample_mode='avg',
-    #     need1x1_up=False,
-    #     filter_size_down=5,
-    #     filter_size_up=3,
-    #     # filter_skip_size=1,
-    #     need_sigmoid=True,
-    #     need_bias=True,
-    #     pad='reflection',
-    #     act_fun='LeakyReLU'
-    # )
 
     logger.info(f"Now mask with sparsity level '{sparsity}' is starting to get learned on image '{image_name}' with sigma={sigma}.")
-    logger.info(f"Noisy PSNR: '{noisy_psnr}', noisy SSIM: '{structural_similarity(img_np[0], img_noisy_np[0], channel_axis=0)}'")
+    logger.info(f"Noisy PSNR: '{noisy_psnr}', noisy SSIM: '{noisy_ssim}'")
 
     ### === OES ===
 

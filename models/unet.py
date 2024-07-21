@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .common import * 
+from collections import OrderedDict
+
 
 class ListModule(nn.Module):
     def __init__(self, *args):
@@ -28,6 +30,66 @@ class ListModule(nn.Module):
 
     def __len__(self):
         return len(self._modules)
+
+def UNetCustom(
+        num_input_channels=2, 
+        num_output_channels=1, 
+        num_channels_down=[16, 32, 64, 128, 128], 
+        num_channels_up=[16, 32, 64, 128, 128],
+        filter_size_down=3, filter_size_up=3,
+        need_sigmoid=True, need_bias=True, 
+        pad='zero', upsample_mode='nearest', downsample_mode='stride', 
+        act_fun='LeakyReLu', 
+        need1x1_up=True):
+        
+        assert len(num_channels_down) == len(num_channels_up)
+        n_scales = len(num_channels_down)
+
+        upsample_mode = [upsample_mode] * n_scales if not isinstance(upsample_mode, (list, tuple)) else upsample_mode
+        downsample_mode = [downsample_mode] * n_scales if not isinstance(downsample_mode, (list, tuple)) else downsample_mode
+        filter_size_down = [filter_size_down] * n_scales if not isinstance(filter_size_down, (list, tuple)) else filter_size_down
+        filter_size_up = [filter_size_up] * n_scales if not isinstance(filter_size_up, (list, tuple)) else filter_size_up
+
+        layers = OrderedDict()
+        input_depth = num_input_channels
+
+        for i in range(n_scales):
+            layers[f'down_pool_{i}'] = conv(input_depth, num_channels_down[i], filter_size_down[i], 
+                                             stride=2, bias=need_bias, pad=pad, downsample_mode=downsample_mode[i])
+            layers[f'down_bn_{i}'] = nn.BatchNorm2d(num_channels_down[i])
+            layers[f'down_act_{i}'] = act(act_fun)
+
+            layers[f'down_conv_{i}'] = conv(num_channels_down[i], num_channels_down[i], filter_size_down[i],
+                                            stride=1, bias=need_bias, pad=pad, downsample_mode='stride')
+            layers[f'down_bn2_{i}'] = nn.BatchNorm2d(num_channels_down[i])
+            layers[f'down_act2_{i}'] = act(act_fun)
+
+            input_depth = num_channels_down[i]
+        
+        for i in reversed(range(n_scales)):
+            layers[f'upsample_{i}'] = nn.Upsample(scale_factor=2, mode=upsample_mode[i])
+            layers[f'up_bn_{i}'] = nn.BatchNorm2d(input_depth)
+
+            layers[f'up_conv_{i}'] = conv(input_depth, num_channels_up[i], filter_size_up[i],
+                                          stride=1, bias=need_bias, pad=pad)
+            layers[f'up_bn2_{i}'] = nn.BatchNorm2d(num_channels_up[i])
+            layers[f'up_act_{i}'] = act(act_fun)
+
+            if need1x1_up:
+                layers[f'up_conv2_{i}'] = conv(num_channels_up[i], num_channels_up[i], kernel_size=1,
+                                               stride=1, bias=need_bias, pad=pad)
+                layers[f'up_bn3_{i}'] = nn.BatchNorm2d(num_channels_up[i])
+                layers[f'up_act2_{i}'] = act(act_fun)
+
+            input_depth = num_channels_up[i]
+
+        layers['final_conv'] = conv(num_channels_up[0], num_output_channels, kernel_size=1,
+                                    stride=1, bias=need_bias, pad=pad)
+
+        if need_sigmoid:
+            layers['sigmoid'] = nn.Sigmoid()
+
+        return nn.Sequential(layers)
 
 class UNet(nn.Module):
     '''
