@@ -46,17 +46,32 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     input_depth = 32
     output_depth = 3
 
-    net_orig = skip(
+    # net = skip(
+    #     input_depth, output_depth,
+    #     num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
+    #     num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
+    #     num_channels_skip=[0] * num_layers,
+    #     upsample_mode='nearest',
+    #     downsample_mode='avg',
+    #     need1x1_up=False,
+    #     filter_size_down=5,
+    #     filter_size_up=3,
+    #     filter_skip_size=1,
+    #     need_sigmoid=True,
+    #     need_bias=True,
+    #     pad='reflection',
+    #     act_fun='LeakyReLU'
+    # )
+
+    net = UNetCustom(
         input_depth, output_depth,
         num_channels_down=[16, 32, 64, 128, 128, 128][:num_layers],
         num_channels_up=[16, 32, 64, 128, 128, 128][:num_layers],
-        num_channels_skip=[0] * num_layers,
         upsample_mode='nearest',
         downsample_mode='avg',
         need1x1_up=False,
         filter_size_down=5,
         filter_size_up=3,
-        filter_skip_size=1,
         need_sigmoid=True,
         need_bias=True,
         pad='reflection',
@@ -75,10 +90,12 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     with open(f'{basedir}/p_{image_name}.pkl', 'rb') as f:
         p = cPickle.load(f)
     
-    # print out all the module names that are actually modules, not containers
-    # for name, module in net_orig.named_modules():
+    # # print out all the module names that are actually modules, not containers
+    # for name, module in net.named_modules():
     #     if len(list(module.children())) == 0:
     #         print(module)
+    
+    # exit()
 
     p_net = copy.deepcopy(net_orig)
     logger.debug('p shape: %s', p.shape)
@@ -95,25 +112,25 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # structured_mask = make_mask_structured(net_orig, p_net)
 
     # torch.nn.utils.prune implementation
-    # logger.info('Using prune.ln_structured for masking')
-    # for module in p_net.modules():
-    #     if isinstance(module, torch.nn.Conv2d):
-    #         # logger.debug('Module shape: %s', module.weight.shape)
-    #         before = torch.sum(module.weight != 0)
-    #         # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
-    #         prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
-    #         prune.remove(module, 'weight') #  apply the mask permanently 
-    #         after = torch.sum(module.weight != 0)
-    #         # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
-    #         # logger.debug('Module mask values %s', module.weight_mask)
-    #         logger.debug('Pruned %s weights from %s', (before-after).item(), module)
+    logger.info('Using prune.ln_structured for masking')
+    for module in p_net.modules():
+        if isinstance(module, torch.nn.Conv2d):
+            # logger.debug('Module shape: %s', module.weight.shape)
+            before = torch.sum(module.weight != 0)
+            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
+            prune.ln_structured(module, name='weight', n=1, amount=1-sparsity, dim=1)
+            prune.remove(module, 'weight') #  apply the mask permanently 
+            after = torch.sum(module.weight != 0)
+            # logger.debug('Non-zero weights: %s', torch.sum(module.weight != 0))
+            # logger.debug('Module mask values %s', module.weight_mask)
+            logger.debug('Pruned %s weights from %s', (before-after).item(), module)
 
-    # mask = parameters_to_vector(p_net.parameters())
-    # mask[mask != 0] = 1
+    mask = parameters_to_vector(p_net.parameters())
+    mask[mask != 0] = 1
 
-    # unstructured masking
-    logger.info('Using make_mask_unstructured for masking')
-    mask = make_mask_unstructured(p, sparsity=sparsity)
+    # # unstructured masking
+    # logger.info('Using make_mask_unstructured for masking')
+    # mask = make_mask_unstructured(p, sparsity=sparsity)
 
     logger.info('sparsity of mask: %s', torch.sum(mask == 0).item() / mask.size(0))
     mask_network(mask, net_orig)
@@ -170,7 +187,7 @@ if __name__ == "__main__":
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', help="which image to denoise")
-    parser.add_argument("--max_steps", type=int, default=40000, help="the maximum number of gradient steps to train for")
+    parser.add_argument("--max_steps", type=int, default=60000, help="the maximum number of gradient steps to train for")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show every N steps")
