@@ -135,7 +135,7 @@ if __name__ == "__main__":
         'num_epoch': 40000
     }
 
-    config = set_config(args.file, default_config)
+    config = set_config(args, default_config)
 
     main(
         lr=config.get('lr', default_config['lr']),

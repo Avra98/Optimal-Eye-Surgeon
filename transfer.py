@@ -138,7 +138,7 @@ if __name__ == "__main__":
         'sparsity': 0.05
     }
 
-    config = set_config(args.file, default_config)
+    config = set_config(args, default_config)
 
     main(
         max_steps=config.get('max_steps', default_config['max_steps']),

@@ -156,7 +156,7 @@ if __name__ == "__main__":
         'sparsity': 0.05
     }
 
-    config = set_config(args.file, default_config)
+    config = set_config(args, default_config)
 
     main(
         image_name=config.get('image_name', default_config['image_name']),

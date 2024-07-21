@@ -10,7 +10,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-def set_config(conf_file, default_config):
+def set_config(args, default_config):
+    conf_file = args.file
     config = {}
     if conf_file:
         try:
@@ -23,6 +24,12 @@ def set_config(conf_file, default_config):
                 yaml.dump(default_config, file)
                 config = default_config
             print(f"Default configuration file '{conf_file}' has been created.")
+    # Update the config with the command line arguments
+
+    for key, value in vars(args).items():
+        if value is not None:
+            config[key] = value   
+
     return config
 
 def crop_image(img, d=32):

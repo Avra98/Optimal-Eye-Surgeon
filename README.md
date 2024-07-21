@@ -101,19 +101,19 @@ For comparing with baselines
 Run the following command for dense DIP
 
 ```python
-python vanilla_dip.py -f configs/config_vanilla_dip.yaml
+python baselines/vanilla_dip.py -f configs/config_vanilla_dip.yaml
 ```
 
 Run the following command for deep-decoder
 
 ```python
-python vanilla_decoder.py -f configs/config_vanilla_decoder.yaml
+python baselines/vanilla_decoder.py -f configs/config_vanilla_decoder.yaml
 ```
 
 and the command for SGLD
 
 ```python
-python sgld.py -f configs/config_sgld.yaml
+python baselines/sgld.py -f configs/config_sgld.yaml
 ```
 
 ### Finding-3: Sparse network transfer
