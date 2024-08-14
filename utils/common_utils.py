@@ -39,6 +39,38 @@ def get_logger(
 
     return log
 
+def add_hook_feature_maps(model):
+    model.feature_maps = {}
+
+    def save_feature_map(module, input, output):
+        layer_fms = model.feature_maps.get(module.name, [])
+        layer_fms.append(output.detach())
+        model.feature_maps[module.name] = layer_fms
+
+    def register_hooks(module):
+        if isinstance(module, nn.Conv2d):
+            module.register_forward_hook(save_feature_map)
+
+    model.apply(register_hooks)
+
+def plot_feature_maps(path: str, feature_maps: dict):
+    """
+    Plot all feature maps from a model to a single file, grouped by layer (key of the feature_maps dict).
+
+    Args:
+        path: path to the file where the feature maps will be saved
+        feature_maps: dictionary with layer names as keys and lists of feature maps as values
+    """
+    fig, axes = plt.subplots(len(feature_maps), 1, figsize=(20, 20))
+    for i, (layer_name, fms) in enumerate(feature_maps.items()):
+        fms = torch.cat(fms, dim=0)
+        fms = fms.cpu().numpy()
+        fms = fms.transpose(0, 2, 3, 1)
+        fms = fms.reshape(-1, fms.shape[1], fms.shape[2])
+        axes[i].imshow(fms, cmap='gray')
+        axes[i].set_title(layer_name)
+    plt.savefig(path)
+
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''
 

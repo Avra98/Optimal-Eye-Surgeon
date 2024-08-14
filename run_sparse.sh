@@ -11,7 +11,7 @@ gpu_arr=(1 2 3 4 5)  # Assuming you have 4 GPUs available
 LEN=${#gpu_arr[@]}
 
 for image in "${IMAGES[@]}"; do
-    python train_sparse.py --image_name=$image --device=cuda:${gpu_arr[$((COUNTER % LEN))]} &
+    python train_sparse.py --image_name=$image --sparsity=0.1 --device=cuda:${gpu_arr[$((COUNTER % LEN))]} &
     COUNTER=$((COUNTER + 1))
     if [ $((COUNTER % 10)) -eq 0 ]; then
         wait
