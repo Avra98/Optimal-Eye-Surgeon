@@ -7,7 +7,6 @@ import torch.nn.utils.prune as prune
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-import random
 import os
 import math
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ from utils.common_utils import *
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('main')
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))

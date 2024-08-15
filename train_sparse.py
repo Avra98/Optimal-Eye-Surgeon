@@ -31,21 +31,26 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
          sparsity: float = 0.95, mask_type: str = 'structured', force: bool = False):
 
     basedir = f'sparse_models/{image_name}/sparse-{sparsity}/noise-{sigma}'
+    outdir = f'{basedir}/out_sparsenet'
+
+    if not os.path.exists(basedir):
+        print(f"Model does not exist for {image_name}/sparse-{sparsity}/noise-{sigma}")
+        return
+
     # if there are already results here, quit and don't overwrite
-    if os.path.exists(basedir):
+    if os.path.exists(outdir):
         if not force:
-            print(f"Results already exist for {image_name} with sparse-{sparsity} and noise-{sigma}")
-            print('If you want to run the experiment again, delete the existing results first or overwrite with --force')
+            print(f"Results already exist for {image_name}/sparse-{sparsity}/noise-{sigma}")
+            print('If you want to run the experiment again, delete the existing results first or allow overwrite with --force')
             return
         else:
-            print(f"WARNING: Overwriting results for {image_name} with sparse-{sparsity} and noise-{sigma}")
+            print(f"WARNING: You may potentially overwrite results for {image_name}/sparse-{sparsity}/noise-{sigma}")
 
-    outdir = f'{basedir}/out_sparsenet'
     os.makedirs(outdir, exist_ok=True)
 
     logger = get_logger(
-        LOG_FORMAT='%(asctime)s %(moduels)s %(levelname)-8s %(message)s', 
-        LOG_NAME='sparse', 
+        LOG_FORMAT='%(asctime)s %(module)s %(levelname)-8s %(message)s', 
+        LOG_NAME='main', 
         LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
 
     device = f'cuda:{device}' if device.isdigit() else device
@@ -89,11 +94,9 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # structured_mask = make_mask_structured(net_orig, p_net)
 
     if mask_type == 'structured':
-        logger.info('Using prune.ln_structured for masking')
-        mask = make_mask_torch_pruneln(p_net, p, sparsity=sparsity)
+        mask = make_mask_torch_pruneln(p_net, sparsity=sparsity)
     elif mask_type == 'unstructured':
         # unstructured masking
-        logger.info('Using make_mask_unstructured for masking')
         mask = make_mask_unstructured(p, sparsity=sparsity)
     else: 
         raise ValueError(f"Mask type '{mask_type}' not supported")
@@ -101,6 +104,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     logger.info('Actual sparsity achived: %s', torch.sum(mask == 0).item() / mask.size(0))
     mask_network(mask, net_init)
 
+    logger.info("=== START SPARSE TRAINING ===")
     ssim, psnr, out = train_sparse(net_init, net_input, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device)
     np.savez(f'{outdir}/psnr.npz', psnr=psnr)
@@ -164,10 +168,9 @@ if __name__ == "__main__":
     parser.add_argument("--show_every", type=int, default=1000, help="show every N steps")
     parser.add_argument("--mask_type", type=str, default='structured', help="mask type")
     parser.add_argument("--device", type=str, default='cuda:0', help="specify which GPU")
-    parser.add_argument("--force", type=bool, default=False, help="overwrite existing results?")
+    parser.add_argument('-f', "--force", action='store_true', default=False, help="overwrite existing results?")
 
     args = parser.parse_args()
 
     main(image_name=args.image_name, sparsity=args.sparsity, max_steps=args.max_steps, sigma=args.sigma,
-         num_layers=args.num_layers, show_every=args.show_every, mask_type=args.mask_type, device=args.device, 
-         force=args.force)
+         show_every=args.show_every, mask_type=args.mask_type, device=args.device, force=args.force)

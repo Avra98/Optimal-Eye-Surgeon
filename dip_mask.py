@@ -32,34 +32,34 @@ def main(image_name: str, lr: float, max_steps: int,
     # if there are already results here, quit and don't overwrite
     if os.path.exists(basedir):
         if not force:
-            print(f"Results already exist for {image_name} with sparse-{sparsity} and noise-{sigma}")
-            print('If you want to run the experiment again, delete the existing results first or overwrite with --force')
+            print(f"Results already exist for {image_name}/sparse-{sparsity}/noise-{sigma}")
+            print('If you want to run the experiment again, delete the existing results first or allow overwrite with --force')
             return
         else:
-            print(f"WARNING: Overwriting results for {image_name} with sparse-{sparsity} and noise-{sigma}")
+            print(f"WARNING: You may potentially overwrite results for {image_name}/sparse-{sparsity}/noise-{sigma}")
 
     outdir = f'{basedir}/out_mask'
     os.makedirs(outdir, exist_ok=True)
 
     logger = get_logger(
-        LOG_FORMAT='%(asctime)s %(moduels)s %(levelname)-8s %(message)s', 
-        LOG_NAME='sparse', 
+        LOG_FORMAT='%(asctime)s %(module)s %(levelname)-8s %(message)s', 
+        LOG_NAME='main', 
         LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
+    logger.debug(f'Logging started in {__name__}, logging to {outdir}')
+    logger.debug('Logging handlers: %s', logger.handlers)
 
     device = f'cuda:{device}' if device.isdigit() else device
     torch.set_default_device(device)
     torch.set_default_dtype(torch.float32)
 
-    logger.info(
-        f'DEVICE: {device}\n'
-        f'LR: {lr}\n'
-        f'OPTIM: ADAM\n'
-        f'SPARSITY: {sparsity}\n'
-        f'NOISE: {sigma}\n'
-        f'KL REG: {kl}\n'
-        f'LAYERS: {num_layers}\n'
-        f'...Showing every {show_every} steps for {max_steps} iterations...'
-    )
+    logger.info(f'DEVICE: {device}')
+    logger.info(f'LR: {lr}')
+    logger.info(f'OPTIM: ADAM')
+    logger.info(f'SPARSITY: {sparsity}')
+    logger.info(f'NOISE: {sigma}')
+    logger.info(f'KL REG: {kl}')
+    logger.info(f'LAYERS: {num_layers}')
+    logger.info(f'...Showing every {show_every} steps for {max_steps} iterations...')
 
     prior_sigma = inverse_sigmoid(sparsity)
 
@@ -98,15 +98,24 @@ def main(image_name: str, lr: float, max_steps: int,
 
     ### === Mask learning algorithm === ###
 
-    logger.info(f"Noisy PSNR: '{noisy_psnr}', noisy SSIM: '{noisy_ssim}'")
+    logger.info(f"Noisy PSNR:\t{noisy_psnr}")
+    logger.info(f"Noisy SSIM:\t{noisy_ssim}")
 
+
+    logger.info("=== START MASK LEARNING ===")
     # Learn quantization probability, p, corresponding to each parameter
     p, quant_loss, p_sig = learn_quantization_probabilities_dip(
         net, net_input, img_np, img_noisy_np, num_steps=max_steps, lr=lr, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
+    
+    logger.info("=== END MASK LEARNING ===")
 
     unstructured_mask = make_mask_unstructured(p, sparsity)
-    structured_mask = make_mask_torch_pruneln(p, sparsity)
+    
+    p_net = copy.deepcopy(net)
+    logger.debug('p shape: %s', p.shape)
+    vector_to_parameters(p[0], p_net.parameters())
+    structured_mask = make_mask_torch_pruneln(p_net, sparsity)
 
     _ = copy.deepcopy(net)
     
@@ -136,8 +145,9 @@ def main(image_name: str, lr: float, max_steps: int,
             out_structured = net_unst_mask(net_input)
             out_unstructured = net_st_mask(net_input)
         
-        plot_feature_maps(f'{outdir}/fm_unstructured', net_unst_mask.feature_maps)
-        plot_feature_maps(f'{outdir}/fm_torch_prune', net_st_mask.feature_maps)
+        os.makedirs(f'{outdir}/feature_maps', exist_ok=True)
+        plot_feature_maps(f'{outdir}/feature_maps/fm_unstructured', net_unst_mask.feature_maps)
+        plot_feature_maps(f'{outdir}/feature_maps/fm_torch_prune', net_st_mask.feature_maps)
 
         out_np_unstruct = torch_to_np(out_structured)
         out_np_struct = torch_to_np(out_unstructured)
@@ -218,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument("--noise_steps", type=int, default=60000, help="number of steps for noise")
     parser.add_argument("--kl", type=float, default=1e-9, help="regularization strength of kl")
     parser.add_argument("--sparsity", type=float, default=0.05, help="fraction to keep")
-    parser.add_argument("--force", type=bool, default=False, help="overwrite existing results?")
+    parser.add_argument('-f', "--force", action='store_true', default=False, help="overwrite existing results?")
 
     args = parser.parse_args()
 

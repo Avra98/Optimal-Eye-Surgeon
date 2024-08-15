@@ -10,6 +10,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+logger = logging.getLogger('main')
+
 def get_logger(    
         LOG_FORMAT     = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         LOG_NAME       = '',
@@ -42,16 +44,14 @@ def get_logger(
 def add_hook_feature_maps(model):
     model.feature_maps = {}
 
-    def save_feature_map(module, input, output):
-        layer_fms = model.feature_maps.get(module.name, [])
-        layer_fms.append(output.detach())
-        model.feature_maps[module.name] = layer_fms
+    def get_activation(layer_name):
+        def hook(module, input, output):
+            model.feature_maps[layer_name] = output.detach()
+        return hook
 
-    def register_hooks(module):
-        if isinstance(module, nn.Conv2d):
-            module.register_forward_hook(save_feature_map)
-
-    model.apply(register_hooks)
+    for name, module in model.named_modules():
+        if 'conv' in name and isinstance(module, nn.Conv2d):
+            module.register_forward_hook(get_activation(name))
 
 def plot_feature_maps(path: str, feature_maps: dict):
     """
@@ -59,17 +59,33 @@ def plot_feature_maps(path: str, feature_maps: dict):
 
     Args:
         path: path to the file where the feature maps will be saved
-        feature_maps: dictionary with layer names as keys and lists of feature maps as values
+        feature_maps: dictionary with layer names as keys and tensors of feature maps as values
     """
-    fig, axes = plt.subplots(len(feature_maps), 1, figsize=(20, 20))
-    for i, (layer_name, fms) in enumerate(feature_maps.items()):
-        fms = torch.cat(fms, dim=0)
-        fms = fms.cpu().numpy()
-        fms = fms.transpose(0, 2, 3, 1)
-        fms = fms.reshape(-1, fms.shape[1], fms.shape[2])
-        axes[i].imshow(fms, cmap='gray')
-        axes[i].set_title(layer_name)
-    plt.savefig(path)
+    logger.info(f"Plotting feature maps to {path}... this may take a while")
+
+    for layer_name, fms in feature_maps.items():
+        num_fms = fms.size(1)  # Number of feature maps in this layer
+        num_cols = 8  # Number of columns for plotting
+        num_rows = (num_fms + num_cols - 1) // num_cols  # Number of rows required
+
+        fig, axes = plt.subplots(num_rows, num_cols, figsize=(num_cols * 2, num_rows * 2))
+        axes = axes.flatten()  # Flatten the axes array for easy iteration
+
+        for i in range(num_fms):
+            ax = axes[i]
+            ax.imshow(fms[0, i].cpu().numpy(), cmap='viridis')
+            ax.axis('off')
+            ax.set_title(f'{layer_name} map {i+1}')
+
+        # Turn off any remaining unused axes
+        for i in range(num_fms, len(axes)):
+            axes[i].axis('off')
+
+        plt.tight_layout()
+        plt.savefig(f'{path}_{layer_name}.png')
+        plt.close(fig)
+
+        logger.debug(f"Saved feature maps for layer {layer_name}")
 
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''
