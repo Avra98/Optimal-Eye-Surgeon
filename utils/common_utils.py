@@ -41,6 +41,17 @@ def get_logger(
 
     return log
 
+def send_email(to, subject, body=''):
+    import smtplib
+
+    fromaddr = "hiyouhave1newmessage@gmail.com"
+    toaddr = to
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.login(fromaddr, "hwbs yvro qwch fzcd")
+    msg = f'subject: {subject}\n\n{body}'
+    server.sendmail(fromaddr, toaddr, msg)
+    server.close()
+
 def add_hook_feature_maps(model):
     model.feature_maps = {}
 
@@ -73,7 +84,7 @@ def plot_feature_maps(path: str, feature_maps: dict):
 
         for i in range(num_fms):
             ax = axes[i]
-            ax.imshow(fms[0, i].cpu().numpy(), cmap='viridis')
+            ax.imshow(fms[0, i].cpu().numpy())
             ax.axis('off')
             ax.set_title(f'{layer_name} map {i+1}')
 

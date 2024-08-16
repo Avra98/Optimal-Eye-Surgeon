@@ -5,7 +5,6 @@ import warnings
 import torch
 import torch.optim
 import argparse
-import logging
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from utils.denoising_utils import *
 from utils.quant import *
@@ -88,10 +87,10 @@ def main(image_name: str, lr: float, max_steps: int,
         act_fun='LeakyReLU'
     )
 
-    with open(f'{basedir}/net_init.pkl', 'wb') as f:
-        cPickle.dump(net, f)
-    with open(f'{basedir}/net_input.pkl', 'wb') as f:
-        cPickle.dump(net_input, f)
+    with open(f'{basedir}/net_init.pth', 'wb') as f:
+        torch.save(net, f)
+    with open(f'{basedir}/net_input.pth', 'wb') as f:
+        torch.save(net_input, f)
 
     logger.info(f"Saved initial network and input to {basedir}")
 
@@ -126,8 +125,8 @@ def main(image_name: str, lr: float, max_steps: int,
     #     cPickle.dump(unstructured_mask, f)
     # with open(f'{basedir}/mask_structured_{image_name}.pkl', 'wb') as f:
     #     cPickle.dump(structured_mask, f)
-    with open(f'{basedir}/p-star.pkl', 'wb') as f:
-        cPickle.dump(p, f)
+    with open(f'{basedir}/p-star.pth', 'wb') as f:
+        torch.save(p, f)
 
 
     # TODO plot out feature maps after each layer: https://cs231n.github.io/convolutional-networks/

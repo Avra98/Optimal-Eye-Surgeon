@@ -8,7 +8,6 @@ import torch
 import torch.optim
 import torch.nn.utils.prune as prune
 import argparse
-import pickle as cPickle
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity 
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from utils.denoising_utils import *
@@ -63,14 +62,12 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     logger.info(f"Target sparsity {sparsity*100}% on image '{image_name}' with sigma={sigma}")
     logger.info(f"Outdir: {outdir}")
 
-    with open(f'{basedir}/net_init.pkl', 'rb') as f:
-        net_init = cPickle.load(f)
-    with open(f'{basedir}/net_input.pkl', 'rb') as f:
-        net_input = cPickle.load(f)
-    # with open(f'{basedir}/mask_{image_name}.pkl', 'rb') as f:
-    #     mask = cPickle.load(f)
-    with open(f'{basedir}/p-star.pkl', 'rb') as f:
-        p = cPickle.load(f)
+    with open(f'{basedir}/net_init.pth', 'rb') as f:
+        net_init = torch.load(f, map_location=device)
+    with open(f'{basedir}/net_input.pth', 'rb') as f:
+        net_input = torch.load(f, map_location=device)
+    with open(f'{basedir}/p-star.pth', 'rb') as f:
+        p = torch.load(f, map_location=device)
     
     # # print out all the module names that are actually modules, not containers
     # for name, module in net.named_modules():
@@ -114,7 +111,8 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         add_hook_feature_maps(net_init)
 
         out_np = net_init(net_input).detach().cpu().numpy()
-        plot_feature_maps(f'{outdir}/fm_{mask_type}.png', net_init.feature_maps)
+        os.makedirs(f'{outdir}/feature_maps', exist_ok=True)
+        plot_feature_maps(f'{outdir}/feature_maps/fm_{mask_type}.png', net_init.feature_maps)
 
         img_var = np_to_torch(img_np)
         img_np = img_var.detach().cpu().numpy()
