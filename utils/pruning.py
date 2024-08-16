@@ -43,10 +43,7 @@ def make_mask_torch_pruneln(p_net, sparsity=0.5):
     and the remaining elements are set to 0 (inactive).
 
     Args:
-        net (nn.Module): The network to mask.
         p_net (nn.Module): The network with the quantization probabilities as weights.
-        imp : A function that takes in a filter and evaluates its importance normalized by the size of the filter.
-              If None, defaults to L1 norm.
         sparsity (float, optional): The target sparsity level (percentage of elements to keep active). Defaults to 0.05 (5%).
     
     Returns:
@@ -66,7 +63,7 @@ def make_mask_torch_pruneln(p_net, sparsity=0.5):
 
     return mask
 
-def make_mask_unstructured(logits, sparsity=0.05):
+def make_mask_unstructured(logits, sparsity=0.95):
     """Creates a mask for enforcing sparsity based on a thresholding strategy.
 
     This function generates a binary mask from a provided tensor (logits) to enforce a desired sparsity level.
@@ -83,7 +80,7 @@ def make_mask_unstructured(logits, sparsity=0.05):
     logger.debug("===== UNSTRUCTURED PRUNING =====")
     
     num_elements = logits.numel()
-    num_to_keep = int((sparsity) * num_elements)
+    num_to_keep = int((1-sparsity) * num_elements)
     logger.debug(f"Number of elements to keep: {num_to_keep}")
 
     # Get the threshold and top elements
