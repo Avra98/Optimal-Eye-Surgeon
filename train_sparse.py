@@ -92,25 +92,20 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # structured_mask = make_mask_structured(net_orig, p_net)
 
     unst_mask = make_mask_unstructured(p, sparsity=sparsity)
+    mask_network(unst_mask, net_init)
+    save_net_out(net_init, net_input, f'{outdir}/out_init_unstructured.png')
     if mask_type == 'structured':
         m2 = make_mask_torch_pruneln(p_net, sparsity=0.2)
         logger.debug(f'torch_prune mask sparsity: {torch.sum(m2 == 0).item() / m2.size(0)}')
         mask = unst_mask & m2
-    elif mask_type == 'unstructured':
-        # unstructured masking
-        mask = unst_mask
     else: 
         raise ValueError(f"Mask type '{mask_type}' not supported")
 
     logger.info('Actual sparsity achived: %s', torch.sum(mask == 0).item() / mask.size(0))
-    mask_network(mask, net_init)
 
-    out = net_init(net_input).detach().cpu().numpy()
-    img = out[0].transpose(1, 2, 0)
-    plt.imshow(img)
-    plt.axis('off')
-    plt.savefig(f'{outdir}/out_init.png', bbox_inches='tight', pad_inches=0)
-    plt.close()
+    if mask_type is not 'unstructured':
+        mask_network(mask, net_init)
+        save_net_out(net_init, net_input, f'{outdir}/out_init_{mask_type}.png')
 
     # from IPython import embed; embed()
     # exit()
@@ -167,6 +162,14 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     send_email(['sunken@umich.edu'],
     f'Sparse training for {image_name}/sparse-{sparsity}/noise-{sigma} is done',
     files=[f'{outdir}/debug.txt', f'{outdir}/out_init.png', f'{outdir}/out_final_{mask_type}.png'])
+
+def save_net_out(net, net_input, file):
+    out = net(net_input).detach().cpu().numpy()
+    img = out[0].transpose(1, 2, 0)
+    plt.imshow(img)
+    plt.axis('off')
+    plt.savefig(file, bbox_inches='tight', pad_inches=0)
+    plt.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")

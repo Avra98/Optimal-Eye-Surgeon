@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 logger = logging.getLogger('main')
 
+
 def get_logger(    
         LOG_FORMAT     = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         LOG_NAME       = '',
