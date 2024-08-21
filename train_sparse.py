@@ -1,4 +1,5 @@
 from __future__ import print_function
+import traceback
 import matplotlib.pyplot as plt
 import os
 import logging
@@ -108,7 +109,7 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     img = out[0].transpose(1, 2, 0)
     plt.imshow(img)
     plt.axis('off')
-    plt.savefig(f'{outdir}/initial_out.png', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'{outdir}/out_init.png', bbox_inches='tight', pad_inches=0)
     plt.close()
 
     # from IPython import embed; embed()
@@ -135,9 +136,9 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
                                                                  channel_axis=0, data_range=img_np.max() - img_np.min()))
 
         output_paths = [
-            f"{outdir}/out_{image_name}.png",
-            f"{outdir}/img_np_{image_name}.png",
-            f"{outdir}/img_noisy_np_{image_name}.png"
+            f"{outdir}/out_final_{mask_type}.png",
+            f"{outdir}/gt.png",
+            f"{outdir}/noisy.png"
         ]
 
         images_to_save = [out_np[0, :, :, :].transpose(1, 2, 0), img_np[0, :, :, :].transpose(1, 2, 0), img_noisy_np.transpose(1, 2, 0)]
@@ -163,8 +164,9 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
 
     torch.cuda.empty_cache()
     logger.info("Experiment done")
-    send_email(['2489828285@tmomail.net', 'sunken@umich.edu',
-    f'Sparse training for {image_name}/sparse-{sparsity}/noise-{sigma} is done'])
+    send_email(['sunken@umich.edu'],
+    f'Sparse training for {image_name}/sparse-{sparsity}/noise-{sigma} is done',
+    files=[f'{outdir}/debug.txt', f'{outdir}/out_init.png', f'{outdir}/out_final_{mask_type}.png'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")
@@ -189,5 +191,6 @@ if __name__ == "__main__":
         main(image_name=args.image_name, sparsity=args.sparsity, max_steps=args.max_steps, sigma=args.sigma,
          show_every=args.show_every, mask_type=args.mask_type, device=args.device, force=args.force)
     except Exception as e:
-        send_email(['2489828285@tmomail.net', 'sunken@umich.edu'],
-                   f'ERROR occured during sparse training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}', str(e))
+        logger.error(traceback.format_exc())
+        send_email(['sunken@umich.edu'],
+                   f"ERROR occured during mask training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}", traceback.format_exc())
