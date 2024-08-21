@@ -1,0 +1,37 @@
+2024-08-20 13:58:27,191 train_sparse INFO     Target sparsity 15.0% on image 'pepper' with sigma=0.1
+2024-08-20 13:58:27,191 train_sparse INFO     Outdir: sparse_models/pepper/sparse-0.15/noise-0.1/out_sparsenet
+2024-08-20 13:58:30,865 train_sparse DEBUG    p shape: torch.Size([1, 3008867])
+2024-08-20 13:58:30,868 pruning DEBUG    ===== UNSTRUCTURED PRUNING =====
+2024-08-20 13:58:30,868 pruning DEBUG    Number of elements to keep: 2557536
+2024-08-20 13:58:30,874 pruning DEBUG    Threshold value: -1.937381625175476
+2024-08-20 13:58:30,876 pruning DEBUG    Number of elements equal to threshold: 1
+2024-08-20 13:58:30,879 pruning DEBUG    Number of elements to randomly select: 1
+2024-08-20 13:58:30,879 pruning DEBUG    ===== TORCH PRUNING =====
+2024-08-20 13:58:30,879 pruning DEBUG    Sparsity: 0.15
+2024-08-20 13:58:30,884 pruning DEBUG    Pruned 2/16 filters  from down_conv_0.1 (shape: torch.Size([16, 16, 5, 5]))
+2024-08-20 13:58:30,886 pruning DEBUG    Actual zero filters: 2/16
+2024-08-20 13:58:30,891 pruning DEBUG    Pruned 5/32 filters  from down_conv_1.1 (shape: torch.Size([32, 32, 5, 5]))
+2024-08-20 13:58:30,893 pruning DEBUG    Actual zero filters: 5/32
+2024-08-20 13:58:30,898 pruning DEBUG    Pruned 10/64 filters  from down_conv_2.1 (shape: torch.Size([64, 64, 5, 5]))
+2024-08-20 13:58:30,900 pruning DEBUG    Actual zero filters: 10/64
+2024-08-20 13:58:30,905 pruning DEBUG    Pruned 19/128 filters  from down_conv_3.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:58:30,907 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,912 pruning DEBUG    Pruned 19/128 filters  from down_conv_4.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:58:30,915 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,921 pruning DEBUG    Pruned 19/128 filters  from down_conv_5.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:58:30,922 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,927 pruning DEBUG    Pruned 19/128 filters  from up_conv_5.1 (shape: torch.Size([128, 128, 3, 3]))
+2024-08-20 13:58:30,929 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,934 pruning DEBUG    Pruned 19/128 filters  from up_conv_4.1 (shape: torch.Size([128, 128, 3, 3]))
+2024-08-20 13:58:30,937 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,942 pruning DEBUG    Pruned 19/128 filters  from up_conv_3.1 (shape: torch.Size([128, 128, 3, 3]))
+2024-08-20 13:58:30,944 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,949 pruning DEBUG    Pruned 19/128 filters  from up_conv_2.1 (shape: torch.Size([64, 128, 3, 3]))
+2024-08-20 13:58:30,952 pruning DEBUG    Actual zero filters: 19/128
+2024-08-20 13:58:30,956 pruning DEBUG    Pruned 10/64 filters  from up_conv_1.1 (shape: torch.Size([32, 64, 3, 3]))
+2024-08-20 13:58:30,959 pruning DEBUG    Actual zero filters: 10/64
+2024-08-20 13:58:30,964 pruning DEBUG    Pruned 5/32 filters  from up_conv_0.1 (shape: torch.Size([16, 32, 3, 3]))
+2024-08-20 13:58:30,966 pruning DEBUG    Actual zero filters: 5/32
+2024-08-20 13:58:30,971 pruning DEBUG    Pruned 2/16 filters  from final_conv.1 (shape: torch.Size([3, 16, 1, 1]))
+2024-08-20 13:58:30,973 pruning DEBUG    Actual zero filters: 2/16
+2024-08-20 13:58:30,976 train_sparse INFO     Actual sparsity achived: 0.15000031573346378

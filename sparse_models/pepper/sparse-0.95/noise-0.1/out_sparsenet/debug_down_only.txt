@@ -1,0 +1,23 @@
+2024-08-20 13:53:15,747 train_sparse INFO     Target sparsity 5.0% on image 'pepper' with sigma=0.1
+2024-08-20 13:53:15,747 train_sparse INFO     Outdir: sparse_models/pepper/sparse-0.05/noise-0.1/out_sparsenet
+2024-08-20 13:53:19,540 train_sparse DEBUG    p shape: torch.Size([1, 3008867])
+2024-08-20 13:53:19,543 pruning DEBUG    ===== UNSTRUCTURED PRUNING =====
+2024-08-20 13:53:19,543 pruning DEBUG    Number of elements to keep: 2858423
+2024-08-20 13:53:19,547 pruning DEBUG    Threshold value: -3.6902015209198
+2024-08-20 13:53:19,549 pruning DEBUG    Number of elements equal to threshold: 1
+2024-08-20 13:53:19,552 pruning DEBUG    Number of elements to randomly select: 1
+2024-08-20 13:53:19,552 pruning DEBUG    ===== TORCH PRUNING =====
+2024-08-20 13:53:19,552 pruning DEBUG    Sparsity: 0.05
+2024-08-20 13:53:19,557 pruning DEBUG    Pruned 1/16 filters  from down_conv_0.1 (shape: torch.Size([16, 16, 5, 5]))
+2024-08-20 13:53:19,559 pruning DEBUG    Actual zero filters: 1/16
+2024-08-20 13:53:19,564 pruning DEBUG    Pruned 2/32 filters  from down_conv_1.1 (shape: torch.Size([32, 32, 5, 5]))
+2024-08-20 13:53:19,566 pruning DEBUG    Actual zero filters: 2/32
+2024-08-20 13:53:19,571 pruning DEBUG    Pruned 3/64 filters  from down_conv_2.1 (shape: torch.Size([64, 64, 5, 5]))
+2024-08-20 13:53:19,573 pruning DEBUG    Actual zero filters: 3/64
+2024-08-20 13:53:19,578 pruning DEBUG    Pruned 6/128 filters  from down_conv_3.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:53:19,580 pruning DEBUG    Actual zero filters: 6/128
+2024-08-20 13:53:19,585 pruning DEBUG    Pruned 6/128 filters  from down_conv_4.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:53:19,587 pruning DEBUG    Actual zero filters: 6/128
+2024-08-20 13:53:19,592 pruning DEBUG    Pruned 6/128 filters  from down_conv_5.1 (shape: torch.Size([128, 128, 5, 5]))
+2024-08-20 13:53:19,595 pruning DEBUG    Actual zero filters: 6/128
+2024-08-20 13:53:19,597 train_sparse INFO     Actual sparsity achived: 0.05000021602815944

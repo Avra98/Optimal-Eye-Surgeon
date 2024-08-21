@@ -1,4 +1,5 @@
 from __future__ import print_function
+import traceback
 import matplotlib.pyplot as plt
 import os
 import warnings
@@ -10,6 +11,7 @@ from utils.denoising_utils import *
 from utils.quant import *
 from utils.imp import *
 from utils.pruning import * 
+from utils.common_utils import get_logger, send_email
 from models import *
 
 # Suppress warnings
@@ -109,29 +111,22 @@ def main(image_name: str, lr: float, max_steps: int,
     
     logger.info("=== END MASK LEARNING ===")
 
-    unstructured_mask = make_mask_unstructured(p, sparsity)
-    
-    p_net = copy.deepcopy(net)
-    logger.debug('p shape: %s', p.shape)
-    vector_to_parameters(p[0], p_net.parameters())
-    structured_mask = make_mask_torch_pruneln(p_net, sparsity)
-
-    _ = copy.deepcopy(net)
-    
-    net_unst_mask = mask_network(unstructured_mask, net)
-    net_st_mask = mask_network(structured_mask, _)
-
-    # with open(f'{basedir}/mask_unstructured_{image_name}.pkl', 'wb') as f:
-    #     cPickle.dump(unstructured_mask, f)
-    # with open(f'{basedir}/mask_structured_{image_name}.pkl', 'wb') as f:
-    #     cPickle.dump(structured_mask, f)
-    with open(f'{basedir}/p-star.pth', 'wb') as f:
-        torch.save(p, f)
-
-
-    # TODO plot out feature maps after each layer: https://cs231n.github.io/convolutional-networks/
-    # TODO also do for train_sparse
     with torch.no_grad():
+        with open(f'{basedir}/p-star.pth', 'wb') as f:
+            torch.save(p, f)
+
+        unstructured_mask = make_mask_unstructured(p, sparsity)
+        p_net = copy.deepcopy(net)
+        vector_to_parameters(p.data[0], p_net.parameters())
+
+        structured_mask = make_mask_torch_pruneln(p_net, sparsity)
+
+        _ = copy.deepcopy(net)
+        
+        net_unst_mask = mask_network(unstructured_mask, net)
+        net_unst_mask = net
+        net_st_mask = mask_network(structured_mask, _)
+
         add_hook_feature_maps(net_unst_mask)
         add_hook_feature_maps(net_st_mask)
         if mask_opt == 'single':
@@ -141,15 +136,15 @@ def main(image_name: str, lr: float, max_steps: int,
             out_structured = draw_multiple_masks(p, net_unst_mask, net_input)
             out_unstructured = draw_multiple_masks(p, net_st_mask, net_input)
         else:
-            out_structured = net_unst_mask(net_input)
-            out_unstructured = net_st_mask(net_input)
+            out_unstructured = net_unst_mask(net_input)
+            out_structured = net_st_mask(net_input)
         
         os.makedirs(f'{outdir}/feature_maps', exist_ok=True)
         plot_feature_maps(f'{outdir}/feature_maps/fm_unstructured', net_unst_mask.feature_maps)
         plot_feature_maps(f'{outdir}/feature_maps/fm_torch_prune', net_st_mask.feature_maps)
 
-        out_np_unstruct = torch_to_np(out_structured)
-        out_np_struct = torch_to_np(out_unstructured)
+        out_np_unstruct = torch_to_np(out_unstructured)
+        out_np_struct = torch_to_np(out_structured)
         img_var = np_to_torch(img_np)
         img_np = torch_to_np(img_var)
 
@@ -204,6 +199,9 @@ def main(image_name: str, lr: float, max_steps: int,
 
     torch.cuda.empty_cache()
     logger.info("Experiment done")
+    send_email(['sunken@umich.edu'],
+    f"Mask training for {image_name}/sparse-{sparsity}/noise-{sigma} is done",
+    files=[f'{outdir}/debug.txt', f'{outdir}/out_unstructured.png', f'{outdir}/out_structured.png'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using DIP")
@@ -231,6 +229,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, sigma=args.sigma,
+    try:
+        main(image_name=args.image_name, lr=args.lr, max_steps=args.max_steps, sigma=args.sigma,
          num_layers=args.num_layers, show_every=args.show_every, device=args.device,
          mask_opt=args.mask_opt, kl=args.kl, sparsity=args.sparsity, force=args.force)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        send_email(['sunken@umich.edu'],
+                   f"ERROR occured during mask training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}", traceback.format_exc())
