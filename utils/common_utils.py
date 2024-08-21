@@ -41,15 +41,35 @@ def get_logger(
 
     return log
 
-def send_email(to, subject, body=''):
+def send_email(to: list, subject: str, body: str='', files: list=[]):
     import smtplib
+    from os.path import basename
+    from email.mime.application import MIMEApplication
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.utils import COMMASPACE, formatdate
 
+    assert isinstance(to, list)
+
+    msg = MIMEMultipart()
     fromaddr = "hiyouhave1newmessage@gmail.com"
-    toaddr = to
+    msg['From'] = fromaddr
+    msg['To'] = COMMASPACE.join(to)
+    # msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body))
+
+    for f in files:
+        with open(f, 'rb') as file:
+            part = MIMEApplication(file.read(), Name=basename(f))
+        
+        part['Content-Disposition'] = f'attachment; filename="{basename(f)}"'
+        msg.attach(part)
+
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
     server.login(fromaddr, "hwbs yvro qwch fzcd")
-    msg = f'subject: {subject}\n\n{body}'
-    server.sendmail(fromaddr, toaddr, msg)
+    server.sendmail(fromaddr, to, msg.as_string())
     server.close()
 
 def add_hook_feature_maps(model):
@@ -62,6 +82,7 @@ def add_hook_feature_maps(model):
 
     for name, module in model.named_modules():
         if 'conv' in name and isinstance(module, nn.Conv2d):
+            # logger.debug('Counting zero filters (from hooks): %s/%s', torch.sum(torch.all(module.weight == 0, dim=(0,2,3))).item(), module.weight.shape[1])
             module.register_forward_hook(get_activation(name))
 
 def plot_feature_maps(path: str, feature_maps: dict):
