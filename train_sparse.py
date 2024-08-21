@@ -90,16 +90,29 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # handwritten implementation of zeroing
     # structured_mask = make_mask_structured(net_orig, p_net)
 
+    unst_mask = make_mask_unstructured(p, sparsity=sparsity)
     if mask_type == 'structured':
-        mask = make_mask_torch_pruneln(p_net, sparsity=sparsity)
+        m2 = make_mask_torch_pruneln(p_net, sparsity=0.2)
+        logger.debug(f'torch_prune mask sparsity: {torch.sum(m2 == 0).item() / m2.size(0)}')
+        mask = unst_mask & m2
     elif mask_type == 'unstructured':
         # unstructured masking
-        mask = make_mask_unstructured(p, sparsity=sparsity)
+        mask = unst_mask
     else: 
         raise ValueError(f"Mask type '{mask_type}' not supported")
 
     logger.info('Actual sparsity achived: %s', torch.sum(mask == 0).item() / mask.size(0))
     mask_network(mask, net_init)
+
+    out = net_init(net_input).detach().cpu().numpy()
+    img = out[0].transpose(1, 2, 0)
+    plt.imshow(img)
+    plt.axis('off')
+    plt.savefig(f'{outdir}/initial_out.png', bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+    # from IPython import embed; embed()
+    # exit()
 
     logger.info("=== START SPARSE TRAINING ===")
     ssim, psnr, out = train_sparse(net_init, net_input, mask, img_np, img_noisy_np,
@@ -150,6 +163,8 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
 
     torch.cuda.empty_cache()
     logger.info("Experiment done")
+    send_email(['2489828285@tmomail.net', 'sunken@umich.edu',
+    f'Sparse training for {image_name}/sparse-{sparsity}/noise-{sigma} is done'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image denoising using sparse DIP")
@@ -170,5 +185,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(image_name=args.image_name, sparsity=args.sparsity, max_steps=args.max_steps, sigma=args.sigma,
+    try:
+        main(image_name=args.image_name, sparsity=args.sparsity, max_steps=args.max_steps, sigma=args.sigma,
          show_every=args.show_every, mask_type=args.mask_type, device=args.device, force=args.force)
+    except Exception as e:
+        send_email(['2489828285@tmomail.net', 'sunken@umich.edu'],
+                   f'ERROR occured during sparse training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}', str(e))

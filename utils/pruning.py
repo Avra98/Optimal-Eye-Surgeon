@@ -28,14 +28,22 @@ def mask_network(mask, model):
     mask = mask.to(device)
 
     k = 0
-    for param in model.parameters():
-        t = len(param.view(-1))
-        param.data = param.data * mask[k:(k + t)].view(param.data.shape)
+    for name, param in model.named_parameters():
+        t = param.numel()
+        param.data = param.data * mask[k:(k + t)].view_as(param.data)
         k += t
 
     return model
 
-def make_mask_torch_pruneln(p_net, sparsity=0.5):
+def make_mask_depgraph(model, sparsity=0.5):
+    """
+    Create a mask for enforcing sparsity in the convolution filters based on the dependency graph pruning method.
+    """
+    DG = tp.DependencyGraph().build_dependency(model, torch.randn(1, 3, 256, 256))
+
+    group = DG.get_pruning_group(model)
+
+def make_mask_torch_pruneln(model, sparsity=0.5):
     """Creates a mask for enforcing sparsity in the convolution filters based on global structured pruning.
 
     This function evaluates the importance of each filter in the model and generates a binary mask to (approximately) enforce a desired sparsity level.
@@ -50,18 +58,20 @@ def make_mask_torch_pruneln(p_net, sparsity=0.5):
         torch.Tensor: The generated sparse mask (flattened) for all weights in the network.
     """
     logger.debug("===== TORCH PRUNING =====")
-    for name, module in p_net.named_modules():
+    logger.debug("Sparsity: %s", sparsity)
+    for name, module in model.named_modules():
         if isinstance(module, torch.nn.Conv2d) and 'conv' in name: # only prune convolutional layers
-            prune.ln_structured(module, name='weight', n=1, amount=sparsity, dim=0)
-            nf_pruned = torch.sum(torch.all(module.weight_mask == 0, dim=(1,2,3))).item()
+            prune.ln_structured(module, name='weight', n=1, amount=sparsity, dim=1)
+            prune.l1_unstructured(module, name='bias', amount=0)
+            nf_pruned = torch.sum(torch.all(module.weight_mask == 0, dim=(0,2,3))).item()
             prune.remove(module, 'weight') #  apply the mask permanently 
-            logger.debug('Pruned %s/%s filters  from %s', nf_pruned, module.weight.shape[0], name)
+            prune.remove(module, 'bias')
+            logger.debug('Pruned %s/%s filters  from %s (shape: %s)', nf_pruned, module.weight.shape[1], name, module.weight.shape)
+            logger.debug('Actual zero filters: %s/%s', torch.sum(torch.all(module.weight == 0, dim=(0,2,3))).item(), module.weight.shape[1])
 
-    mask = parameters_to_vector(p_net.parameters())
+    mask = parameters_to_vector(model.parameters())
 
-    mask[mask != 0] = 1
-
-    return mask
+    return mask != 0
 
 def make_mask_unstructured(logits, sparsity=0.95):
     """Creates a mask for enforcing sparsity based on a thresholding strategy.
