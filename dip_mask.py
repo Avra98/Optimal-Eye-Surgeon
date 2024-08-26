@@ -1,4 +1,5 @@
 from __future__ import print_function
+from datetime import datetime
 import traceback
 import matplotlib.pyplot as plt
 import os
@@ -28,6 +29,8 @@ torch.backends.cudnn.benchmark = True
 def main(image_name: str, lr: float, max_steps: int,
          sigma: float = 0.2, num_layers: int = 4, show_every: int = 1000, device: str = 'cuda:0',
          mask_opt: str = "det", kl: float = 1e-9, sparsity: float = 0.05, force: bool = False):
+    timestamps = {}
+    timestamps['start'] = datetime.now()
 
     basedir = f'sparse_models/{image_name}/sparse-{sparsity}/noise-{sigma}'
     # if there are already results here, quit and don't overwrite
@@ -105,9 +108,11 @@ def main(image_name: str, lr: float, max_steps: int,
 
     logger.info("=== START MASK LEARNING ===")
     # Learn quantization probability, p, corresponding to each parameter
+    timestamps['train_start'] = datetime.now()
     p, quant_loss, p_sig = learn_quantization_probabilities_dip(
         net, net_input, img_np, img_noisy_np, num_steps=max_steps, lr=lr, q=2, 
         kl=kl, prior_sigma=prior_sigma, sparsity=sparsity, show_every=show_every)
+    timestamps['train_end'] = datetime.now()
     
     logger.info("=== END MASK LEARNING ===")
 
@@ -197,10 +202,32 @@ def main(image_name: str, lr: float, max_steps: int,
     plt.savefig(f'{outdir}/p_histogram_kl-{kl}.png')
     plt.clf()
 
+    timestamps['end'] = datetime.now()
+
+    s = (timestamps['train_end']-timestamps['train_start']).seconds
+    h, r = divmod(s, 3600)
+    m, s = divmod(r, 60)
+    logger.info("Training time: %s:%s:%s", h, m, s)
+
+    s = (timestamps['end']-timestamps['start']).seconds
+    th, tr = divmod(s, 3600)
+    tm, ts = divmod(tr, 60)
+    logger.info("Total time: %s:%s:%s", th, tm, ts)
+
     torch.cuda.empty_cache()
     logger.info("Experiment done")
     send_email(['sunken@umich.edu'],
     f"Mask training for {image_name}/sparse-{sparsity}/noise-{sigma} is done",
+    f"""
+    Started: {timestamps['start'].astimezone().isoformat(sep=' ', timespec='seconds')}\n
+    Ended: {timestamps['end'].astimezone().isoformat(sep=' ', timespec='seconds')}\n
+    Training time: {h:02}:{m:02}:{s:02}\n
+    Total time: {th:02}:{tm:02}:{ts:02}\n
+    UNSTRUCTURED output PSNR: {psnr_gt_unstrct}\n 
+    UNSTRUCTURED output SSIM: {ssim_gt_unstrct}\n
+    STRUCTURED output PSNR: {psnr_gt_strct}\n
+    STRUCTURED output SSIM: {ssim_gt_strct}\n
+    """,
     files=[f'{outdir}/debug.txt', f'{outdir}/out_unstructured.png', f'{outdir}/out_structured.png'])
 
 if __name__ == "__main__":

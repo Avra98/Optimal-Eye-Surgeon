@@ -35,13 +35,31 @@ def mask_network(mask, model):
 
     return model
 
-def make_mask_depgraph(model, sparsity=0.5):
-    """
-    Create a mask for enforcing sparsity in the convolution filters based on the dependency graph pruning method.
-    """
-    DG = tp.DependencyGraph().build_dependency(model, torch.randn(1, 3, 256, 256))
+def prune_depgraph(model, example_input, sparsity=0.5):
+    """Physically removes filters from the model using torch-pruning.  """
+    logger.debug("===== DEPGRAPH pruning =====")
+    logger.debug("Sparsity: %s", sparsity)
+    DG = tp.DependencyGraph().build_dependency(model, example_input)
+    model.train() # reset the model to training mode
 
-    group = DG.get_pruning_group(model)
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Conv2d) and 'conv' in name:
+            old_shape = module.weight.shape
+
+            # importance calculation and sorting
+            imp = torch.norm(module.weight_p, p=1, dim=(1, 2, 3))
+            # imp = module.weight_p.flatten(1).abs().sum(1)
+            argimp_sorted = torch.argsort(imp)
+            nf_prune = round(sparsity * argimp_sorted.numel())
+            idxs_to_prune = argimp_sorted[:nf_prune]
+
+            # prune the filters
+            group = DG.get_pruning_group(module, tp.prune_conv_out_channels, idxs=idxs_to_prune)
+            group.prune()
+
+            logger.debug('Pruned %s/%s filters  from %s', nf_prune, len(imp), name)
+            logger.debug(f'Pruning indices: {sorted(idxs_to_prune.tolist())}')
+            # logger.debug('Shape: %s -> %s', old_shape, module.weight.shape)
 
 def make_mask_torch_pruneln(model, sparsity=0.5):
     """Creates a mask for enforcing sparsity in the convolution filters based on global structured pruning.
@@ -61,13 +79,18 @@ def make_mask_torch_pruneln(model, sparsity=0.5):
     logger.debug("Sparsity: %s", sparsity)
     for name, module in model.named_modules():
         if isinstance(module, torch.nn.Conv2d) and 'conv' in name: # only prune convolutional layers
-            prune.ln_structured(module, name='weight', n=1, amount=sparsity, dim=1)
+            # note that this isn't pruning the filters but it actually gives good results too
+            # prune.ln_structured(module, name='weight', n=0, amount=sparsity, dim=1) 
+
+            prune.ln_structured(module, name='weight', n=1, amount=sparsity, dim=0) 
             prune.l1_unstructured(module, name='bias', amount=0)
-            nf_pruned = torch.sum(torch.all(module.weight_mask == 0, dim=(0,2,3))).item()
+            idxs_to_prune = torch.nonzero(torch.all(module.weight_mask == 0, dim=(1,2,3))).squeeze()
+            nf_prune = idxs_to_prune.numel()
             prune.remove(module, 'weight') #  apply the mask permanently 
             prune.remove(module, 'bias')
-            logger.debug('Pruned %s/%s filters  from %s (shape: %s)', nf_pruned, module.weight.shape[1], name, module.weight.shape)
-            logger.debug('Actual zero filters: %s/%s', torch.sum(torch.all(module.weight == 0, dim=(0,2,3))).item(), module.weight.shape[1])
+            logger.debug('Pruned %s/%s filters  from %s (shape: %s)', nf_prune, module.out_channels, name, module.weight.shape)
+            logger.debug(f'Pruning indices: {idxs_to_prune.tolist()}')
+            # logger.debug('Actual zero filters: %s/%s', torch.sum(torch.all(module.weight == 0, dim=(0,2,3))).item(), module.weight.shape[1])
 
     mask = parameters_to_vector(model.parameters())
 

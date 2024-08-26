@@ -1,22 +1,29 @@
 from __future__ import print_function
+from threading import Thread
 import traceback
 import matplotlib.pyplot as plt
 import os
 import logging
-import warnings
+import warnings 
 import numpy as np
 import torch
 import torch.optim
 import torch.nn.utils.prune as prune
 import argparse
+from datetime import datetime
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr, structural_similarity 
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from utils.denoising_utils import *
 from models import *
 from utils.quant import *
 from utils.imp import *
-from utils.pruning import *
 
+from utils.pruning import (
+    mask_network,
+    make_mask_unstructured,
+    make_mask_torch_pruneln,
+    prune_depgraph,
+)
 # Suppress warnings
 # warnings.filterwarnings("ignore")
 
@@ -28,30 +35,37 @@ dtype = torch.cuda.FloatTensor
 
 def main(image_name: str, max_steps: int, sigma: float = 0.2,
          show_every: int = 1000, device: str = 'cuda:0', 
-         sparsity: float = 0.95, mask_type: str = 'structured', force: bool = False):
+         p_mean: float = 0.95, 
+         sparsity: float=0.95,
+         filter_sparsity: float = 0.3,
+         mask_type: str = 'structured', force: bool = False):
+    timestamps = {}
+    timestamps['start'] = datetime.now()
 
-    basedir = f'sparse_models/{image_name}/sparse-{sparsity}/noise-{sigma}'
-    outdir = f'{basedir}/out_sparsenet'
+    basedir = f'sparse_models/{image_name}/sparse-{p_mean}/noise-{sigma}'
+    outdir = f'{basedir}/out_sparsenet/{mask_type}'
+    file_postfix = f'__s-{sparsity}_fs-{filter_sparsity}'
 
     if not os.path.exists(basedir):
-        print(f"Model does not exist for {image_name}/sparse-{sparsity}/noise-{sigma}")
+        print(f"Model does not exist for {outdir}")
         return
 
     # if there are already results here, quit and don't overwrite
     if os.path.exists(outdir):
         if not force:
-            print(f"Results already exist for {image_name}/sparse-{sparsity}/noise-{sigma}")
+            print(f"Results may already exist for {outdir} and {file_postfix}")
             print('If you want to run the experiment again, delete the existing results first or allow overwrite with --force')
             return
         else:
-            print(f"WARNING: You may potentially overwrite results for {image_name}/sparse-{sparsity}/noise-{sigma}")
+            print(f"WARNING: You may potentially overwrite results for {outdir}")
 
     os.makedirs(outdir, exist_ok=True)
 
     logger = get_logger(
         LOG_FORMAT='%(asctime)s %(module)s %(levelname)-8s %(message)s', 
         LOG_NAME='main', 
-        LOG_FILE_INFO=f'{outdir}/info.txt', LOG_FILE_DEBUG=f'{outdir}/debug.txt')
+        LOG_FILE_INFO=f'{outdir}/info{file_postfix}.txt', 
+        LOG_FILE_DEBUG=f'{outdir}/debug{file_postfix}.txt')
 
     device = f'cuda:{device}' if device.isdigit() else device
     torch.set_default_device(device)
@@ -60,7 +74,8 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     train_folder = 'images'
     img_np, img_noisy_np, noisy_psnr = load_image(train_folder, image_name, sigma)
 
-    logger.info(f"Target sparsity {sparsity*100}% on image '{image_name}' with sigma={sigma}")
+    logger.info(f"Target mask sparsity {sparsity*100}% on image '{image_name}' with sigma={sigma}")
+    logger.info(f"Filter sparsity: {filter_sparsity}")
     logger.info(f"Outdir: {outdir}")
 
     with open(f'{basedir}/net_init.pth', 'rb') as f:
@@ -91,28 +106,35 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
     # handwritten implementation of zeroing
     # structured_mask = make_mask_structured(net_orig, p_net)
 
-    unst_mask = make_mask_unstructured(p, sparsity=sparsity)
-    mask_network(unst_mask, net_init)
-    save_net_out(net_init, net_input, f'{outdir}/out_init_unstructured.png')
+    mask = make_mask_unstructured(p, sparsity=sparsity)
+    unst_masked = mask_network(mask, net_init)
+    save_net_out(net_init, net_input, f'{outdir}/out_init__unstructured_{sparsity}.png')
     if mask_type == 'structured':
-        m2 = make_mask_torch_pruneln(p_net, sparsity=0.2)
+        m2 = make_mask_torch_pruneln(p_net, sparsity=filter_sparsity)
         logger.debug(f'torch_prune mask sparsity: {torch.sum(m2 == 0).item() / m2.size(0)}')
-        mask = unst_mask & m2
+        mask = mask & m2
+        mask_network(mask, net_init)
+    elif mask_type == 'depgraph':
+        attach_quantization_probabilities_to_model(net_init, p[0])
+        prune_depgraph(net_init, net_input, sparsity=filter_sparsity)
+        __import__('IPython').embed()
+    elif mask_type == 'unstructured':
+        pass
     else: 
         raise ValueError(f"Mask type '{mask_type}' not supported")
 
     logger.info('Actual sparsity achived: %s', torch.sum(mask == 0).item() / mask.size(0))
 
-    if mask_type is not 'unstructured':
-        mask_network(mask, net_init)
-        save_net_out(net_init, net_input, f'{outdir}/out_init_{mask_type}.png')
+    save_net_out(net_init, net_input, f'{outdir}/out_init{file_postfix}.png')
 
-    # from IPython import embed; embed()
-    # exit()
 
-    logger.info("=== START SPARSE TRAINING ===")
+    logger.info("=== START SPARSE TRAINING ===") 
+    timestamps['train_start'] = datetime.now()
     ssim, psnr, out = train_sparse(net_init, net_input, mask, img_np, img_noisy_np,
                              max_step=max_steps, show_every=show_every, device=device)
+    timestamps['train_end'] = datetime.now()
+    logger.info("=== SPARSE TRAINING DONE")
+
     np.savez(f'{outdir}/psnr.npz', psnr=psnr)
     np.savez(f'{outdir}/ssim.npz', ssim=ssim)
 
@@ -120,18 +142,19 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         add_hook_feature_maps(net_init)
 
         out_np = net_init(net_input).detach().cpu().numpy()
-        os.makedirs(f'{outdir}/feature_maps', exist_ok=True)
-        plot_feature_maps(f'{outdir}/feature_maps/fm_{mask_type}.png', net_init.feature_maps)
+        fmdir = f'{outdir}/feature_maps{file_postfix}'
+        os.makedirs(f'{outdir}/feature_maps{file_postfix}', exist_ok=True)
+        plot_feature_maps(f'{fmdir}/fm{file_postfix}', net_init.feature_maps)
 
         img_var = np_to_torch(img_np)
         img_np = img_var.detach().cpu().numpy()
         psnr_gt = compare_psnr(img_np, out_np)
+        ssim_gt = structural_similarity(img_np[0], out_np[0], channel_axis=0, data_range=img_np.max() - img_np.min())
         logger.info("PSNR of output image is: %s", psnr_gt)
-        logger.info("SSIM of output image is: %s", structural_similarity(img_np[0], out_np[0], 
-                                                                 channel_axis=0, data_range=img_np.max() - img_np.min()))
+        logger.info("SSIM of output image is: %s", ssim_gt)
 
         output_paths = [
-            f"{outdir}/out_final_{mask_type}.png",
+            f"{outdir}/out_final{file_postfix}.png",
             f"{outdir}/gt.png",
             f"{outdir}/noisy.png"
         ]
@@ -147,21 +170,48 @@ def main(image_name: str, max_steps: int, sigma: float = 0.2,
         plt.title('PSNR vs Iterations')
         plt.xlabel('Iterations')
         plt.ylabel('PSNR')
-        plt.savefig(f'{outdir}/psnr.png')
+        plt.savefig(f'{outdir}/psnr{file_postfix}.png')
         plt.close()
 
         plt.plot(ssim)
         plt.title('SSIM vs Iterations')
         plt.xlabel('Iterations')
         plt.ylabel('SSIM')
-        plt.savefig(f'{outdir}/ssim.png')
+        plt.savefig(f'{outdir}/ssim{file_postfix}.png')
         plt.close()
 
     torch.cuda.empty_cache()
-    logger.info("Experiment done")
+
+
+    timestamps['end'] = datetime.now()
+
+    s = (timestamps['train_end']-timestamps['train_start']).seconds
+    h, r = divmod(s, 3600)
+    m, s = divmod(r, 60)
+    logger.info("Training time: %s:%s:%s", h, m, s)
+
+    ts = (timestamps['end']-timestamps['start']).seconds
+    th, tr = divmod(ts, 3600)
+    tm, ts = divmod(tr, 60)
+    logger.info("Total time: %s:%s:%s", th, tm, ts)
+
     send_email(['sunken@umich.edu'],
-    f'Sparse training for {image_name}/sparse-{sparsity}/noise-{sigma} is done',
-    files=[f'{outdir}/debug.txt', f'{outdir}/out_init.png', f'{outdir}/out_final_{mask_type}.png'])
+    f'Sparse training for {outdir} is done',
+    f"""
+    Postfix: {file_postfix}\n\n
+    Started: {timestamps['start'].astimezone().isoformat(sep=' ', timespec='seconds')}\n
+    Ended: {timestamps['end'].astimezone().isoformat(sep=' ', timespec='seconds')}\n
+    Training time: {h:02}:{m:02}:{s:02}\n
+    Total time: {th:02}:{tm:02}:{ts:02}\n
+    Final PSNR: {psnr_gt}\n
+    Final SSIM: {ssim_gt}\n
+    """,
+    files=[
+        f'{outdir}/debug{file_postfix}.txt', 
+        f'{outdir}/info{file_postfix}.txt',
+        f'{outdir}/out_init{file_postfix}.png',
+        f'{outdir}/out_final{file_postfix}.png',
+    ])
 
 def save_net_out(net, net_input, file):
     out = net(net_input).detach().cpu().numpy()
@@ -179,21 +229,24 @@ if __name__ == "__main__":
     ]
 
     parser.add_argument("--image_name", type=str, choices=image_choices, default='pepper', help="which image to denoise")
-    parser.add_argument("--sparsity", type=float,  default=0.95, help="which image to denoise")
+    parser.add_argument('-p', "--p_mean", type=float,  default=0.95, help="p_mean used to select what saved p's to use")
+    parser.add_argument('-s', "--sparsity", type=float,  default=0.95, help="unstructured sparsity")
+    parser.add_argument('-fs', "--filter_sparsity", type=float,  default=0.3, help="filter sparsity")
     parser.add_argument("--max_steps", type=int, default=60000, help="the maximum number of gradient steps to train for")
     parser.add_argument("--sigma", type=float, default=0.1, help="noise level")
     parser.add_argument("--num_layers", type=int, default=6, help="number of layers")
     parser.add_argument("--show_every", type=int, default=1000, help="show every N steps")
-    parser.add_argument("--mask_type", type=str, default='structured', help="mask type")
-    parser.add_argument("--device", type=str, default='cuda:0', help="specify which GPU")
+    parser.add_argument('-mt', "--mask_type", type=str, default='unstructured', help="mask type")
+    parser.add_argument('-d', "--device", type=str, default='cuda:0', help="specify which GPU")
     parser.add_argument('-f', "--force", action='store_true', default=False, help="overwrite existing results?")
 
     args = parser.parse_args()
 
     try:
-        main(image_name=args.image_name, sparsity=args.sparsity, max_steps=args.max_steps, sigma=args.sigma,
+        main(image_name=args.image_name, p_mean=args.p_mean, sparsity=args.sparsity, filter_sparsity=args.filter_sparsity, 
+             max_steps=args.max_steps, sigma=args.sigma,
          show_every=args.show_every, mask_type=args.mask_type, device=args.device, force=args.force)
     except Exception as e:
         logger.error(traceback.format_exc())
         send_email(['sunken@umich.edu'],
-                   f"ERROR occured during mask training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}", traceback.format_exc())
+                   f"ERROR occured during sparse training for {args.image_name}/sparse-{args.sparsity}/noise-{args.sigma}", traceback.format_exc())

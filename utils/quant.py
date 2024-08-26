@@ -63,6 +63,26 @@ def quant_initialization(model, q=3):
     p = nn.Parameter(inverse_sigmoid(1/q)*torch.ones([q-1, w0.size(0)]).to(device), requires_grad=True)
     return w0, p
 
+def attach_quantization_probabilities_to_model(model, p):
+    assert len(p.shape) == 1
+    assert len(p) == sum(p.numel() for p in model.parameters())
+
+    device = next(model.parameters()).device
+    p.to(device)
+
+    module_dict = dict(model.named_modules())
+
+    start = 0
+    for name, param in model.named_parameters():
+        end = start + param.numel()
+        param_p = p[start:end].view_as(param)
+        
+        module_name, param_name = name.rsplit('.', 1)
+        module = module_dict[module_name]
+        setattr(module, f'{param_name}_p', param_p)
+
+        start = end
+
 def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
     """Learns quantization probabilities using a deep inverse prior (DIP) approach.
 
