@@ -68,14 +68,8 @@ def quant_initialization(model, prior_sigma, q=3):
     return w0, p, prior
 
 
-def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, ino, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
-    """Learns quantization probabilities using a deep inverse prior (DIP) approach.
-
-    This function trains a model to learn quantization probabilities (p) for a specific sparsity level.
-    The training process uses a deep inverse prior (DIP) strategy to optimize the p values while
-    considering a mean squared error (MSE) loss between the model's output and a noisy image,
-    along with a regularization term based on the Kullback-Leibler (KL) divergence between p and a prior distribution.
-
+def learn_quantization_probabilities_dip(model, net_input, img_var, noise_var, num_steps, lr, q=3, kl=1e-5, prior_sigma=torch.tensor(0.0), sparsity=0.5, show_every=1000):
+    """
     Args:
         model (nn.Module): The PyTorch model to be quantized.
         net_input (torch.Tensor): The input tensor for the model.
